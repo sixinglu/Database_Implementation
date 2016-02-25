@@ -50,7 +50,7 @@ class FrameDesc {
         pin_cnt = 0;
     }
 
-   ~FrameDesc() {}
+    ~FrameDesc(){}
 
   public:
     int pin_count() { return(pin_cnt); }
@@ -125,7 +125,7 @@ class BufMgr {
     BufMgr( int bufsize, Replacer *replacer=0 );
 
                 // flushs all valid dirty pages to disk.
-   ~BufMgr();      
+    ~BufMgr();
 
         // Check if this page is in buffer pool, otherwise
         // find a frame for this page, read in and pin it.

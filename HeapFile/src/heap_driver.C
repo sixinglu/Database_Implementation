@@ -88,7 +88,7 @@ int HeapDriver::test1()
         cout << "  - Add " << choice << " records to the file\n";
         for (int i =0; (i < choice) && (status == OK); i++)
           {
-            Rec rec = { i, i*2.5 };
+            Rec rec = { i, static_cast<float>(i*2.5) };  // original i*2.5    sixinglu 2016-02-19
             sprintf(rec.name, "record %i",i);
 
             status = f.insertRecord((char *)&rec, reclen, rid);

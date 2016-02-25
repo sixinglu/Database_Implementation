@@ -12,20 +12,26 @@
 #include "buf.h"
 #include "db.h"
 
+// Question: the peekNext func is wired
+// do we need to define mvNext func?
+// how to unpin all pages in the constructor together?  traverse all pages again?
+
+
 // *******************************************
 // The constructor pins the first page in the file
 // and initializes its private data members from the private data members from hf
 Scan::Scan (HeapFile *hf, Status& status)
 {
-  // put your code here
-  status = OK;
+    status = init(hf);
 }
 
 // *******************************************
 // The deconstructor unpin all pages.
 Scan::~Scan()
 {
-  // put your code here
+    MINIBASE_BM->unpinPage(dataPageId);
+    MINIBASE_BM->unpinPage(dirPageId);
+
 }
 
 // *******************************************
@@ -41,31 +47,111 @@ Status Scan::getNext(RID& rid, char *recPtr, int& recLen)
 // Do all the constructor work.
 Status Scan::init(HeapFile *hf)
 {
-  // put your code here
-  return OK;
+    Status status;
+    
+    _hf = hf;
+    dirPageId = hf->firstDirPageId;
+    
+    dirPageId = INVALID_PAGE;
+    dataPageId = INVALID_PAGE;
+    dataPageRid.pageNo = INVALID_PAGE;
+    dataPageRid.slotNo = INVALID_SLOT;
+    
+    scanIsDone = 0;
+    nxtUserStatus = 0;
+    scanIsDone = 0;
+    
+//    status = firstDataPage();
+
+    return status;
 }
 
 // *******************************************
 // Reset everything and unpin all pages.
 Status Scan::reset()
 {
-  // put your code here
-  return OK;
+    Status status;
+    
+    _hf = NULL;
+    dirPageId = INVALID_PAGE;
+    dataPageId = INVALID_PAGE;
+    dataPageRid.pageNo = INVALID_PAGE;
+    dataPageRid.slotNo = INVALID_SLOT;
+    
+    scanIsDone = 0;
+    nxtUserStatus = 0;
+    
+    status = MINIBASE_BM->unpinPage(dataPageId);
+    status = MINIBASE_BM->unpinPage(dirPageId);
+    return status;
 }
 
 // *******************************************
 // Copy data about first page in the file.
+// no any outside interface, it is a pure inner func
 Status Scan::firstDataPage()
 {
-  // put your code here
-  return OK;
+    // NOTE: when call this func, dirPageId should always be hf->firstDirPageId. which means this func won't be called in the middle of scan.
+
+    Status status;
+    
+    // read first dir page out
+    HFPage *firstDirPage;
+    status = MINIBASE_BM->pinPage(dirPageId, (Page*&)firstDirPage);  // dirPageId always be firstDirPageId
+    dirPage = firstDirPage;
+    
+    
+    // read first dir record out
+    RID firstDirRid;
+    DataPageInfo dirinfo;
+    int recDirLen;
+    status = firstDirPage->firstRecord(firstDirRid);
+    status = firstDirPage->getRecord(firstDirRid, (char*&)dirinfo, recDirLen);
+    
+    dataPageRid = firstDirRid;
+    
+    
+    // read according record page out
+    HFPage *recordDataPage;
+    status = MINIBASE_BM->pinPage(dirinfo.pageId,(Page*&)recordDataPage);
+    
+    dataPageId = dirinfo.pageId;
+    dataPage = recordDataPage;
+    
+    
+    // read according record out
+    RID firstDataRid;
+    char *recPtr;
+    int dataLen;
+    status = recordDataPage->returnRecord(firstDataRid, recPtr, dataLen);  // I use returnRecord here because I don't want to allocate space for recPtr. still safe, because recPtr will not pass out
+    
+    userRid = firstDataRid;
+    
+    RID next;
+    if(recordDataPage->nextRecord(firstDataRid, next)==OK){
+        nxtUserStatus = 1;
+    }
+    else{
+        nxtUserStatus = 0;
+    }
+  
+    return status;
 }
 
 // *******************************************
 // Retrieve the next data page.
 Status Scan::nextDataPage(){
-  // put your code here
-  return OK;
+  
+    Status status;
+    PageId nextDataPage;
+    nextDataPage = dataPage->getNextPage();
+    
+    if(nextDataPage!=INVALID_PAGE){     // if still have pages
+        
+    }
+    
+    
+    return OK;
 }
 
 // *******************************************
