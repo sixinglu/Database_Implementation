@@ -12,7 +12,7 @@
 // new space for HFPage pointer?
 // destructor, temp file how to flag
 // error code ?
-
+static int test=0;
 
 
 #include "heapfile.h"
@@ -45,14 +45,14 @@ HeapFile::HeapFile( const char *name, Status& returnStatus )
         returnStatus = DONE;
     }
     
-    if(name==NULL){  // if passing name == NULL, create an temp file, how we know it is a temp file? sixing
-       // tempfile = true;
-    }
-    else{  // if it is a new file name
-       // tempfile = false;
-    }
+//    if(name==NULL){  // if passing name == NULL, create an temp file, how we know it is a temp file? sixing
+//       // tempfile = true;
+//    }
+//    else{  // if it is a new file name
+//       // tempfile = false;
+//    }
    
-    file_deleted = false;    // set delete = false
+    file_deleted = 0;    // set delete = false
     fileName = new char[strlen(name)+1];  // allocate spece for fileName
     strcpy(fileName,name);   // load file name
     
@@ -72,9 +72,14 @@ HeapFile::HeapFile( const char *name, Status& returnStatus )
 // Destructor
 HeapFile::~HeapFile()
 {
-    Status result;
-
-
+    if(file_deleted==1){  // still exist
+        if(fileName==NULL){
+            deleteFile();
+        }
+        else{
+            MINIBASE_BM->flushAllPages();
+        }
+    }
 
 }
 
@@ -156,7 +161,14 @@ Status HeapFile::insertRecord(char *recPtr, int recLen, RID& outRid)
     
     ///////////// traverse all dir pages link list  //////////////
     while(iterate_dirPage != INVALID_PAGE){   // when reach Pid=-1 means the end of the linklist
-        
+
+    	test++;
+    	//cout<<test<<endl;
+    	// debug
+    	if(test==1724){
+    		cout<<"debug"<<endl;
+    	}
+
         status = MINIBASE_BM->pinPage( iterate_dirPage, (Page* &)currdir );   // read dir page from the disk
         if(status!=OK){
             return MINIBASE_FIRST_ERROR(HEAPFILE, status);
@@ -576,7 +588,7 @@ Scan *HeapFile::openScan(Status& status)
 Status HeapFile::deleteFile()
 {
     Status status;
-    if(file_deleted==false){
+    if(file_deleted==0){
         
         PageId iterate_dirPage = firstDirPageId;
         PageId next = firstDirPageId;
@@ -633,8 +645,11 @@ Status HeapFile::deleteFile()
             
         }
         
-        
-        file_deleted =true;
+        file_deleted =1;
+        status = MINIBASE_DB->delete_file_entry(fileName);
+        if(status!=OK){
+            return MINIBASE_FIRST_ERROR(HEAPFILE, status);
+        }
     }
     
     return OK;
