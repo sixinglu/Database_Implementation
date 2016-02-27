@@ -76,11 +76,14 @@ void HFPage::setNextPage(PageId pageNo)
 Status HFPage::insertRecord(char* recPtr, int recLen, RID& rid)
 {
 	// fill in the body
+//printf("insert recLen %d, space %d\n",recLen,this->freeSpace);
+
 	//enough space?
-	if((this->freeSpace - sizeof(slot_t)) < recLen) return DONE;
+	if((this->freeSpace - (int)sizeof(slot_t)) < recLen) return DONE;
 	//enough space!
 	this->freeSpace -= recLen;
 	int targetSlot = -1;
+
 	for(int i = 0; i < this->slotCnt; i++)
 		if(this->slot[i].length == EMPTY_SLOT)
 		{targetSlot = i;
@@ -101,6 +104,12 @@ Status HFPage::insertRecord(char* recPtr, int recLen, RID& rid)
 	//printf("\n");
 	rid.pageNo = this->curPage;
 	rid.slotNo = targetSlot;
+char* tmp = &this->data[this->slot[targetSlot].offset];
+//printf("insert pno %d, sno %d, data offset %d\n",this->curPage,targetSlot,this->slot[targetSlot].offset);
+//for(int m = 0; m < recLen; m++)
+//printf("%d ",tmp[m]);
+//printf("\n");
+
 	return OK;
 }
 
@@ -186,6 +195,10 @@ Status HFPage::getRecord(RID rid, char* recPtr, int& recLen)
 	int targetSlot = rid.slotNo;
 	recLen = this->slot[targetSlot].length;
 	memcpy(recPtr,&this->data[this->slot[targetSlot].offset],this->slot[targetSlot].length);
+//printf("get pno %d, sno %d, data offset %d\n",rid.pageNo,rid.slotNo,this->slot[targetSlot].offset);/
+//for(int m = 0; m < recLen; m++)
+//printf("%d ",recPtr[m]);
+//printf("\n");
 
 	return OK;
 }
@@ -198,9 +211,14 @@ Status HFPage::getRecord(RID rid, char* recPtr, int& recLen)
 Status HFPage::returnRecord(RID rid, char*& recPtr, int& recLen)
 {
 	// fill in the body
+
 	int targetSlot = rid.slotNo;
+//printf("return pno %d, sno %d, data offset %d\n",rid.pageNo,rid.slotNo,this->slot[targetSlot].offset);
 	recLen = this->slot[targetSlot].length;
 	recPtr = &this->data[this->slot[targetSlot].offset];
+//for(int m = 0; m < recLen; m++)
+//printf("%d ",recPtr[m]);
+//printf("\n");
 	return OK;
 }
 
