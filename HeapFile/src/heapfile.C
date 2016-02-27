@@ -608,7 +608,7 @@ Status HeapFile::deleteFile()
 		PageId next = firstDirPageId;
 		HFPage* currdir;
 
-		DataPageInfo dirinfo;  //read only
+		DataPageInfo* dirinfo;  //read only
 		int recLeninDir;
 
 		///////////// traverse all dir pages link list  //////////////
@@ -630,12 +630,12 @@ Status HeapFile::deleteFile()
 			///////// traverse all dirinfos in one dir page  ///////////
 			do{
 
-				status = currdir->getRecord(recordinPage, (char*&)dirinfo, recLeninDir); // read recLeninDir out is useless here
+				status = currdir->returnRecord(recordinPage, (char*&)dirinfo, recLeninDir); // read recLeninDir out is useless here
 				if(status!=OK){
 					return MINIBASE_FIRST_ERROR(HEAPFILE, NO_RECORDS);
 				}
 
-				status = MINIBASE_BM->freePage(dirinfo.pageId);   // free record page
+				status = MINIBASE_BM->freePage(dirinfo->pageId);   // free record page
 				if(status!=OK){
 					return MINIBASE_FIRST_ERROR(HEAPFILE, status);
 				}
@@ -644,7 +644,7 @@ Status HeapFile::deleteFile()
 
 				prevrecordinPage = recordinPage;     // shallow copy is enough for structure
 
-			}while(currdir->nextRecord(prevrecordinPage,recordinPage)!=OK);
+			}while(currdir->nextRecord(prevrecordinPage,recordinPage)==OK);
 			////////////////////////////////////////////////////////////////
 
 			next = currdir->getNextPage();                       // must record before unpin
