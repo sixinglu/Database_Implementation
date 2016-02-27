@@ -355,7 +355,7 @@ Status HeapFile::insertRecord(char *recPtr, int recLen, RID& outRid)
 
 		status = currDirPage->firstRecord(NewDirRid);
 		status = currDirPage->returnRecord(NewDirRid, (char*&)dirinfo, recLeninDir);   // read recLeninDir out is useless
-		dirinfo->availspace = dirinfo->availspace - recLen;
+		dirinfo->availspace = recordPage->available_space();
 		dirinfo->recct ++;
 
 		// connect prev dir page with this new created dir page
