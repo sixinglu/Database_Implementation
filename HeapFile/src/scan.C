@@ -29,7 +29,6 @@ Scan::Scan (HeapFile *hf, Status& status)
 // The deconstructor unpin all pages.
 Scan::~Scan()
 {
-    MINIBASE_BM->unpinPage(dataPageId);
     MINIBASE_BM->unpinPage(dirPageId);
 
 }
@@ -39,7 +38,44 @@ Scan::~Scan()
 // Also returns the RID of the retrieved record.
 Status Scan::getNext(RID& rid, char *recPtr, int& recLen)
 {
-  // put your code here
+    Status status;
+    
+    if(scanIsDone==1){
+        return DONE;
+    }
+    
+    // directly scan through all data record pages
+    HFPage *currDataPage;
+    status = MINIBASE_BM->pinPage(dataPageId, (Page*&)currDataPage);
+    status = currDataPage->nextRecord(userRid, rid);
+    if(status==OK){
+        status = currDataPage->getRecord(rid, recPtr, recLen);
+        status = MINIBASE_BM->unpinPage(dataPageId);
+    }
+    else{   // reach the end of the record in this page
+        HFPage *nextDataPage;
+        PageId nextDataPageId = currDataPage->getNextPage();
+        if (nextDataPageId==INVALID_PAGE){
+            scanIsDone= 1;
+            status = MINIBASE_BM->unpinPage(dataPageId);
+            return DONE;
+        }
+        status = MINIBASE_BM->pinPage(nextDataPageId, (Page*&)nextDataPage);
+        status = nextDataPage->firstRecord(rid);
+        status = nextDataPage->getRecord(rid, recPtr, recLen);
+        
+        status = MINIBASE_BM->unpinPage(dataPageId);      // unpin curr page
+        status = MINIBASE_BM->unpinPage(nextDataPageId);  // unpin next page
+        
+        // update class member
+        dataPageId = nextDataPageId;
+        dataPage = nextDataPage;
+        
+    }
+    
+    userRid = rid;
+    
+    
   return OK;
 }
 
@@ -61,7 +97,7 @@ Status Scan::init(HeapFile *hf)
     nxtUserStatus = 0;
     scanIsDone = 0;
     
-//    status = firstDataPage();
+    status = firstDataPage();
 
     return status;
 }
@@ -135,21 +171,15 @@ Status Scan::firstDataPage()
         nxtUserStatus = 0;
     }
   
+    status = MINIBASE_BM->unpinPage(dirinfo.pageId);
+    status = MINIBASE_BM->unpinPage(dirPageId);
+    
     return status;
 }
 
 // *******************************************
 // Retrieve the next data page.
 Status Scan::nextDataPage(){
-  
-    Status status;
-    PageId nextDataPage;
-    nextDataPage = dataPage->getNextPage();
-    
-    if(nextDataPage!=INVALID_PAGE){     // if still have pages
-        
-    }
-    
     
     return OK;
 }
