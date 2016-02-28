@@ -29,7 +29,9 @@ Scan::Scan (HeapFile *hf, Status& status)
 // The deconstructor unpin all pages.
 Scan::~Scan()
 {
-    //MINIBASE_BM->unpinPage(dirPageId);
+	if(scanIsDone==0){
+		MINIBASE_BM->unpinPage(dirPageId);
+	}
 
 }
 
@@ -41,7 +43,7 @@ Status Scan::getNext(RID& rid, char *recPtr, int& recLen)
     Status status;
     
     if(scanIsDone==1){
-status = MINIBASE_BM->unpinPage(dirPageId);
+    	status = MINIBASE_BM->unpinPage(dirPageId);
         return DONE;
 
     }
