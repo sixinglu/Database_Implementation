@@ -39,30 +39,30 @@ static error_string_table hfTable( HEAPFILE, hfErrMsgs );
 // Constructor
 HeapFile::HeapFile( const char *name, Status& returnStatus )
 {
-
+//printf("start obj: all %d, unpinned %d\n",MINIBASE_BM->getNumBuffers(),MINIBASE_BM->getNumUnpinnedBuffers());
 	// if the file already exists, do nothing, return
 	if(MINIBASE_DB->get_file_entry(name,firstDirPageId)==OK){
-	file_deleted = 0;    // set delete = false
-	fileName = new char[strlen(name)+1];  // allocate spece for fileName
-	strcpy(fileName,name);   // load file name
+		file_deleted = 0;    // set delete = false
+		fileName = new char[strlen(name)+1];  // allocate spece for fileName
+		strcpy(fileName,name);   // load file name
 		returnStatus = OK;
-}
-else{
+	}
+	else{
 
-	file_deleted = 0;    // set delete = false
-	fileName = new char[strlen(name)+1];  // allocate spece for fileName
-	strcpy(fileName,name);   // load file name
-
-
+		file_deleted = 0;    // set delete = false
+		fileName = new char[strlen(name)+1];  // allocate spece for fileName
+		strcpy(fileName,name);   // load file name
 
 
-	/******* allocate first directory page ***********/
-	DataPageInfo firstdirinfo;
-	RID firtrecRid;
-	allocateDirSpace(&firstdirinfo,firstDirPageId,firtrecRid);  // only know firstDirPageId after allocate
-MINIBASE_DB->add_file_entry(fileName,firstDirPageId);	  // register an entry
-	returnStatus = OK;
-}
+
+
+		/******* allocate first directory page ***********/
+		DataPageInfo firstdirinfo;
+		RID firtrecRid;
+		allocateDirSpace(&firstdirinfo,firstDirPageId,firtrecRid);  // only know firstDirPageId after allocate
+		MINIBASE_DB->add_file_entry(fileName,firstDirPageId);	  // register an entry
+		returnStatus = OK;
+	}
 
 }
 
@@ -197,7 +197,7 @@ Status HeapFile::insertRecord(char *recPtr, int recLen, RID& outRid)
 				// //printf("pin good\n");
 				//currpage->init(dirinfo.pageId);
 				status = currpage->insertRecord(recPtr, recLen, outRid);   // insert the record
-//printf("insert pno %d sno %d to dir pno %d sno %d\n",outRid.pageNo,outRid.slotNo,recordinPage.pageNo,recordinPage.slotNo);
+				//printf("insert pno %d sno %d to dir pno %d sno %d\n",outRid.pageNo,outRid.slotNo,recordinPage.pageNo,recordinPage.slotNo);
 				if(status!=OK){
 					//printf("insert bad\n");
 					return MINIBASE_FIRST_ERROR(HEAPFILE, NO_RECORDS);
@@ -253,7 +253,7 @@ Status HeapFile::insertRecord(char *recPtr, int recLen, RID& outRid)
 
 			// insert the new record data
 			status = readPage->insertRecord(recPtr,recLen,outRid);
-//printf("insert pno %d sno %d to dir pno %d sno %d\n",outRid.pageNo,outRid.slotNo,recordinPage.pageNo,recordinPage.slotNo);
+			//printf("insert pno %d sno %d to dir pno %d sno %d\n",outRid.pageNo,outRid.slotNo,recordinPage.pageNo,recordinPage.slotNo);
 			if(status!=OK){
 				return MINIBASE_FIRST_ERROR(HEAPFILE, NO_SPACE);
 			}
@@ -267,16 +267,16 @@ Status HeapFile::insertRecord(char *recPtr, int recLen, RID& outRid)
 			// insert this new dir record into this dir page
 			RID DirpageRid;
 			status = currdir->insertRecord((char*)&newdpinfop, sizeof(DataPageInfo), DirpageRid);
-//printf("insert data'spno %d to dir pno %d sno %d\n",newdpinfop.pageId,DirpageRid.pageNo,DirpageRid.slotNo);
+			//printf("insert data'spno %d to dir pno %d sno %d\n",newdpinfop.pageId,DirpageRid.pageNo,DirpageRid.slotNo);
 			if(status!=OK){
 				return MINIBASE_FIRST_ERROR(HEAPFILE, NO_SPACE);
 			}
 			//currdir->nextRecord(prevrecordinPage,recordinPage);
-//printf("dir expanded\n");
-		status = MINIBASE_BM->unpinPage(iterate_dirPage,true);                     // not dirty, unpin dir page
-		if(status!=OK){
-			return MINIBASE_FIRST_ERROR(HEAPFILE, status);
-		}
+			//printf("dir expanded\n");
+			status = MINIBASE_BM->unpinPage(iterate_dirPage,true);                     // not dirty, unpin dir page
+			if(status!=OK){
+				return MINIBASE_FIRST_ERROR(HEAPFILE, status);
+			}
 			successFlag = true;
 			break;
 
@@ -386,7 +386,7 @@ Status HeapFile::deleteRecord (const RID& rid)
 	RID rpDataPageRid;    //  according dirinfo rid
 	DataPageInfo dpinfop;
 	int dirLen;
-//printf("heap delete pno %d sno %d\n",rid.pageNo,rid.slotNo);
+	//printf("heap delete pno %d sno %d\n",rid.pageNo,rid.slotNo);
 	status = findDataPage(rid,rpDirPageId, rpdirpage,rpDataPageId, rpdatapage,rpDataPageRid);
 	if(status!=OK){
 		return MINIBASE_FIRST_ERROR(HEAPFILE, status);
@@ -430,10 +430,10 @@ Status HeapFile::deleteRecord (const RID& rid)
 
 
 		return OK;
-	}
-	else{
-		return DONE;
-	}
+}
+else{
+	return DONE;
+}
 
 }
 
@@ -544,6 +544,7 @@ Scan *HeapFile::openScan(Status& status)
 Status HeapFile::deleteFile()
 {
 	Status status;
+//printf("start delete: all %d, unpinned %d\n",MINIBASE_BM->getNumBuffers(),MINIBASE_BM->getNumUnpinnedBuffers());
 	if(file_deleted==0){
 
 		PageId iterate_dirPage = firstDirPageId;
@@ -560,7 +561,7 @@ Status HeapFile::deleteFile()
 			if(status!=OK){
 				return MINIBASE_FIRST_ERROR(HEAPFILE, status);
 			}
-
+			//printf("file torn down loop \n");
 			// get information from dir page
 			RID recordinPage;
 			RID prevrecordinPage;
@@ -571,21 +572,40 @@ Status HeapFile::deleteFile()
 
 			///////// traverse all dirinfos in one dir page  ///////////
 			do{
+				//printf("file torn down pno %d, sno %d\n",recordinPage.pageNo,recordinPage.slotNo);
 
 				status = currdir->returnRecord(recordinPage, (char*&)dirinfo, recLeninDir); // read recLeninDir out is useless here
 				if(status!=OK){
 					return MINIBASE_FIRST_ERROR(HEAPFILE, NO_RECORDS);
 				}
 
-				status = MINIBASE_BM->freePage(dirinfo->pageId);   // free record page
+				HFPage* currpage;
+				status = MINIBASE_BM->pinPage(dirinfo->pageId, (Page* &)currpage );
+				if(status!=OK){
+					return MINIBASE_FIRST_ERROR(HEAPFILE, status);
+				}
+
+				RID DataPageRid;
+				RID prevDataRid;
+				status = currpage->firstRecord(DataPageRid);
 
 				if(status!=OK){
-					return MINIBASE_FIRST_ERROR(HEAPFILE, status);
+					return MINIBASE_FIRST_ERROR(HEAPFILE, NO_RECORDS);
 				}
-				status = MINIBASE_BM->unpinPage(dirinfo->pageId);   // unpin record page
+				do{
+					currpage->deleteRecord(DataPageRid);	
+					//printf("data pno %d sno %d\n",DataPageRid.pageNo,DataPageRid.slotNo);
+					//printf("deleted pno %d, sno %d\n",DataPageRid.pageNo,DataPageRid.slotNo);
+					prevDataRid = DataPageRid;
+
+				}
+				while(currpage->nextRecord(prevDataRid, DataPageRid) == OK);
+				////////////////////////////////////////////////////////////////
+
+				status = MINIBASE_BM->unpinPage(dirinfo->pageId);
 				if(status!=OK){
 					return MINIBASE_FIRST_ERROR(HEAPFILE, status);
-				}
+				}			
 				////////////////////////////////////////////////////////////////
 
 
@@ -595,21 +615,19 @@ Status HeapFile::deleteFile()
 			////////////////////////////////////////////////////////////////
 
 			next = currdir->getNextPage();                       // must record before unpin
-			//MINIBASE_BM->unpinPage(iterate_dirPage);             // not dirty, unpin dir page
+			MINIBASE_BM->unpinPage(iterate_dirPage);             // not dirty, unpin dir page
 
-			status = MINIBASE_BM->freePage(iterate_dirPage);       // free dir page
+			//status = MINIBASE_BM->freePage(iterate_dirPage);       // free dir page
 			if(status!=OK){
 				return MINIBASE_FIRST_ERROR(HEAPFILE, status);
 			}
-				status = MINIBASE_BM->unpinPage(iterate_dirPage);   // unpin record page
-				if(status!=OK){
-					return MINIBASE_FIRST_ERROR(HEAPFILE, status);
-				}
+
 			iterate_dirPage = next;
-
+			//firstDirPageId = next;
 		}
-
+MINIBASE_BM->unpinPage(firstDirPageId);
 		file_deleted =1;
+//printf("end delete: all %d, unpinned %d\n",MINIBASE_BM->getNumBuffers(),MINIBASE_BM->getNumUnpinnedBuffers());
 		status = MINIBASE_DB->delete_file_entry(fileName);
 		if(status!=OK){
 			return MINIBASE_FIRST_ERROR(HEAPFILE, status);
@@ -619,6 +637,11 @@ Status HeapFile::deleteFile()
 	return OK;
 }
 
+/*Status HeapFile::deleteFile()
+  {
+  firstDirPageId = INVALID_PAGE;
+  return OK;
+  }*/
 // ****************************************************************
 // Get a new datapage from the buffer manager and initialize dpinfo
 // (Allocate pages in the db file via buffer manager)
@@ -696,7 +719,7 @@ Status HeapFile::findDataPage(const RID& rid,
 			if(status!=OK){
 				return MINIBASE_FIRST_ERROR(HEAPFILE, NO_RECORDS);
 			}
-//printf("find data curr_dir pno %d sno %d containing %d, target pno %d sno%d \n",recordinPage.pageNo,recordinPage.slotNo,dirinfo.pageId,rid.pageNo,rid.slotNo);
+			//printf("find data curr_dir pno %d sno %d containing %d, target pno %d sno%d \n",recordinPage.pageNo,recordinPage.slotNo,dirinfo.pageId,rid.pageNo,rid.slotNo);
 			if(dirinfo.pageId != rid.pageNo){   // skip if pageNO not match
 
 				prevrecordinPage = recordinPage;
@@ -720,7 +743,7 @@ Status HeapFile::findDataPage(const RID& rid,
 			}
 
 			do{
-//printf("data pno %d sno %d\n",DataPageRid.pageNo,DataPageRid.slotNo);
+				//printf("data pno %d sno %d\n",DataPageRid.pageNo,DataPageRid.slotNo);
 				if(DataPageRid.slotNo==rid.slotNo){    // find the record
 					rpDirPageId = iterate_dirPage;
 					rpDataPageId = dirinfo.pageId;
@@ -817,7 +840,7 @@ Status HeapFile::allocateDirSpace(struct DataPageInfo * dpinfop,
 	if(status!=OK){
 		return MINIBASE_FIRST_ERROR(HEAPFILE, status);
 	}
-printf("first dir pno at alloc %d\n",firstDirPageId);
+	//printf("first dir pno at alloc %d\n",firstDirPageId);
 	return OK;
 }
 

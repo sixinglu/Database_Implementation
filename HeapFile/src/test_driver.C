@@ -185,19 +185,19 @@ Status TestDriver::runAllTests()
     runTest( answer, &TestDriver::test1 );
     sv_answer = (answer == OK) ? sv_answer : FAIL;
 
-    runTest( answer, &TestDriver::test2 );
+    runTest( answer, &TestDriver::test2 );//good
+  sv_answer = (answer == OK) ? sv_answer : FAIL;
+
+    runTest( answer, &TestDriver::test3 );//good
     sv_answer = (answer == OK) ? sv_answer : FAIL;
 
-    runTest( answer, &TestDriver::test3 );
-    sv_answer = (answer == OK) ? sv_answer : FAIL;
-
-    runTest( answer, &TestDriver::test4 );
+   runTest( answer, &TestDriver::test4 );
     sv_answer = (answer == OK) ? sv_answer : FAIL;
 
     runTest( answer, &TestDriver::test5 );
     sv_answer = (answer == OK) ? sv_answer : FAIL;
 
-    runTest( answer, &TestDriver::test6 );
+   runTest( answer, &TestDriver::test6 );//good
     sv_answer = (answer == OK) ? sv_answer : FAIL;
 
     return sv_answer;

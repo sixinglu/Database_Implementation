@@ -97,7 +97,7 @@ Status Scan::init(HeapFile *hf)
     
     _hf = hf;
     dirPageId = hf->firstDirPageId;
-          printf("kabbbooooom %d\n",hf->firstDirPageId);
+          //printf("kabbbooooom %d\n",hf->firstDirPageId);
     dataPageId = INVALID_PAGE;
     dataPageRid.pageNo = INVALID_PAGE;
     dataPageRid.slotNo = INVALID_SLOT;
@@ -145,7 +145,7 @@ Status Scan::firstDataPage()
     status = MINIBASE_BM->pinPage(dirPageId, (Page*&)firstDirPage);  // dirPageId always be firstDirPageId
     dirPage = firstDirPage;
     
-      printf("kabbbooooom %d\n",dirPageId);
+      //printf("kabbbooooom %d\n",dirPageId);
     // read first dir record out
     RID firstDirRid;
     DataPageInfo dirinfo;
