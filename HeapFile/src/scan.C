@@ -88,7 +88,6 @@ Status Scan::init(HeapFile *hf)
     _hf = hf;
     dirPageId = hf->firstDirPageId;
     
-    dirPageId = INVALID_PAGE;
     dataPageId = INVALID_PAGE;
     dataPageRid.pageNo = INVALID_PAGE;
     dataPageRid.slotNo = INVALID_SLOT;
@@ -142,7 +141,7 @@ Status Scan::firstDataPage()
     DataPageInfo dirinfo;
     int recDirLen;
     status = firstDirPage->firstRecord(firstDirRid);
-    status = firstDirPage->getRecord(firstDirRid, (char*&)dirinfo, recDirLen);
+    status = firstDirPage->getRecord(firstDirRid, (char*)&dirinfo, recDirLen);
     
     dataPageRid = firstDirRid;
     
@@ -159,6 +158,7 @@ Status Scan::firstDataPage()
     RID firstDataRid;
     char *recPtr;
     int dataLen;
+    status = recordDataPage->firstRecord(firstDataRid);
     status = recordDataPage->returnRecord(firstDataRid, recPtr, dataLen);  // I use returnRecord here because I don't want to allocate space for recPtr. still safe, because recPtr will not pass out
     
     userRid = firstDataRid;
@@ -172,7 +172,7 @@ Status Scan::firstDataPage()
     }
   
     status = MINIBASE_BM->unpinPage(dirinfo.pageId);
-    status = MINIBASE_BM->unpinPage(dirPageId);
+    //status = MINIBASE_BM->unpinPage(dirPageId);
     
     return status;
 }
