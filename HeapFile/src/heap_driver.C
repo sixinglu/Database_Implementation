@@ -506,7 +506,7 @@ int HeapDriver::test4()
 int HeapDriver::test5()
 {
     cout << "\n  Test 5: Test some error conditions\n";
-printf("start 5: all %d, unpinned %d\n",MINIBASE_BM->getNumBuffers(),MINIBASE_BM->getNumUnpinnedBuffers());
+//printf("start 5: all %d, unpinned %d\n",MINIBASE_BM->getNumBuffers(),MINIBASE_BM->getNumUnpinnedBuffers());
     Status status = OK;
     Scan* scan = 0;
     RID rid;
@@ -553,7 +553,7 @@ printf("start 5: all %d, unpinned %d\n",MINIBASE_BM->getNumBuffers(),MINIBASE_BM
 
     if ( status == OK )
         cout << "  Test 5 completed successfully.\n";
-printf("end5: all %d, unpinned %d\n",MINIBASE_BM->getNumBuffers(),MINIBASE_BM->getNumUnpinnedBuffers());
+//printf("end5: all %d, unpinned %d\n",MINIBASE_BM->getNumBuffers(),MINIBASE_BM->getNumUnpinnedBuffers());
     return (status == OK);
 }
 
