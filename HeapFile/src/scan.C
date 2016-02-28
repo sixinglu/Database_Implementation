@@ -1,7 +1,7 @@
-/*
- * implementation of class Scan for HeapFile project.
- * $Id: scan.C,v 1.1 1997/01/02 12:46:42 flisakow Exp $
- */
+/******************************************************
+ * Author: Sixing Lu, Yang Liu
+ * Date: 2016-02-20
+ ******************************************************/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,11 +11,6 @@
 #include "hfpage.h"
 #include "buf.h"
 #include "db.h"
-
-// Question: the peekNext func is wired
-// do we need to define mvNext func?
-// how to unpin all pages in the constructor together?  traverse all pages again?
-
 
 // *******************************************
 // The constructor pins the first page in the file

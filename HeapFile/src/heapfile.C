@@ -3,17 +3,6 @@
  * Date: 2016-02-20
  ******************************************************/
 
-// questions:
-// should I call db->allocate_page or bm->newpage ?
-// should I call db->deallocate_page or bm->free?
-// getRecord, need new char* space? I think need not. becuase outside already has array[].
-// do I need to delete the empty record page? do I need to delete the empty dir page?   I delete in current version
-
-// new space for HFPage pointer?
-// destructor, temp file how to flag
-// error code ?
-
-
 
 #include "heapfile.h"
 #include <memory.h>
@@ -39,7 +28,6 @@ static error_string_table hfTable( HEAPFILE, hfErrMsgs );
 // Constructor
 HeapFile::HeapFile( const char *name, Status& returnStatus )
 {
-//printf("start obj: all %d, unpinned %d\n",MINIBASE_BM->getNumBuffers(),MINIBASE_BM->getNumUnpinnedBuffers());
 	// if the file already exists, do nothing, return
 	if(MINIBASE_DB->get_file_entry(name,firstDirPageId)==OK){
 		file_deleted = 0;    // set delete = false

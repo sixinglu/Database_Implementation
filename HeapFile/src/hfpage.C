@@ -1,3 +1,8 @@
+/******************************************************
+ * Author:  Yang Liu, Sixing Lu
+ * Date: 2016-02-20
+ ******************************************************/
+
 #include <iostream>
 #include <stdlib.h>
 #include <string.h>
