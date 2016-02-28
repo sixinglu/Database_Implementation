@@ -29,7 +29,7 @@ Scan::Scan (HeapFile *hf, Status& status)
 // The deconstructor unpin all pages.
 Scan::~Scan()
 {
-    MINIBASE_BM->unpinPage(dirPageId);
+    //MINIBASE_BM->unpinPage(dirPageId);
 
 }
 
@@ -41,7 +41,9 @@ Status Scan::getNext(RID& rid, char *recPtr, int& recLen)
     Status status;
     
     if(scanIsDone==1){
+status = MINIBASE_BM->unpinPage(dirPageId);
         return DONE;
+
     }
 
 	// directly scan through all data record pages
@@ -61,9 +63,12 @@ Status Scan::getNext(RID& rid, char *recPtr, int& recLen)
 		HFPage *nextDataPage;
 		PageId nextDataPageId = currDataPage->getNextPage();
 		if (nextDataPageId==INVALID_PAGE){
+//printf("rid %d");
+//printf("curr next fail pno %d, sno %d\n",rid.pageNo,rid.slotNo);
 			scanIsDone= 1;
 			status = MINIBASE_BM->unpinPage(dataPageId);
-			return DONE;
+
+			return OK;
 		}
 		status = MINIBASE_BM->pinPage(nextDataPageId, (Page*&)nextDataPage);
 		status = nextDataPage->firstRecord(nextRecordid);
@@ -92,7 +97,7 @@ Status Scan::init(HeapFile *hf)
     
     _hf = hf;
     dirPageId = hf->firstDirPageId;
-    
+          printf("kabbbooooom %d\n",hf->firstDirPageId);
     dataPageId = INVALID_PAGE;
     dataPageRid.pageNo = INVALID_PAGE;
     dataPageRid.slotNo = INVALID_SLOT;
@@ -140,7 +145,7 @@ Status Scan::firstDataPage()
     status = MINIBASE_BM->pinPage(dirPageId, (Page*&)firstDirPage);  // dirPageId always be firstDirPageId
     dirPage = firstDirPage;
     
-    
+      printf("kabbbooooom %d\n",dirPageId);
     // read first dir record out
     RID firstDirRid;
     DataPageInfo dirinfo;
@@ -178,7 +183,7 @@ Status Scan::firstDataPage()
   
     status = MINIBASE_BM->unpinPage(dirinfo.pageId);
     //status = MINIBASE_BM->unpinPage(dirPageId);
-    
+
     return status;
 }
 

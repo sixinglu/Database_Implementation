@@ -83,7 +83,6 @@ Status HFPage::insertRecord(char* recPtr, int recLen, RID& rid)
 	//enough space!
 	this->freeSpace -= recLen;
 	int targetSlot = -1;
-
 	for(int i = 0; i < this->slotCnt; i++)
 		if(this->slot[i].length == EMPTY_SLOT)
 		{targetSlot = i;
@@ -105,7 +104,7 @@ Status HFPage::insertRecord(char* recPtr, int recLen, RID& rid)
 	rid.pageNo = this->curPage;
 	rid.slotNo = targetSlot;
 char* tmp = &this->data[this->slot[targetSlot].offset];
-//printf("insert pno %d, sno %d, data offset %d\n",this->curPage,targetSlot,this->slot[targetSlot].offset);
+//printf("insert pno %d, sno %d, slotcnt %d\n",this->curPage,targetSlot,this->slotCnt);
 //for(int m = 0; m < recLen; m++)
 //printf("%d ",tmp[m]);
 //printf("\n");
@@ -130,7 +129,7 @@ Status HFPage::deleteRecord(const RID& rid)
 	//dumpPage();
 	//printf("target offset %d target slot %d, used %d\n move length %d\n",holeOffset,targetSlot,this->usedPtr+1,holeOffset - this->usedPtr + 1);
 	//compacting data hole
-	memmove(&this->data[this->usedPtr +holeSize + 1],&this->data[this->usedPtr+1],holeOffset - this->usedPtr + 1);
+	memmove(&this->data[this->usedPtr +holeSize + 1],&this->data[this->usedPtr+1],holeOffset - this->usedPtr - 1);
 	this->usedPtr += holeSize;
 	//compacting slot hole
 
@@ -180,6 +179,7 @@ Status HFPage::nextRecord (RID curRid, RID& nextRid)
 	{if (this->slot[j].length != EMPTY_SLOT)
 		{nextRid.pageNo = this->curPage;
 			nextRid.slotNo = j;
+//printf("next sucker pno %d, sno %d, upbd %d\n",this->curPage,j,this->slotCnt);
 			return OK;
 		}
 	}
@@ -195,11 +195,11 @@ Status HFPage::getRecord(RID rid, char* recPtr, int& recLen)
 	int targetSlot = rid.slotNo;
 	recLen = this->slot[targetSlot].length;
 	memcpy(recPtr,&this->data[this->slot[targetSlot].offset],this->slot[targetSlot].length);
-//printf("get pno %d, sno %d, data offset %d\n",rid.pageNo,rid.slotNo,this->slot[targetSlot].offset);/
-//for(int m = 0; m < recLen; m++)
-//printf("%d ",recPtr[m]);
-//printf("\n");
-
+/*printf("get pno %d, sno %d, data offset %d\n",rid.pageNo,rid.slotNo,this->slot[targetSlot].offset);
+for(int m = 0; m < recLen; m++)
+printf("%d ",recPtr[m]);
+printf("\n");
+*/
 	return OK;
 }
 
