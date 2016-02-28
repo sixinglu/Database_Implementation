@@ -43,38 +43,43 @@ Status Scan::getNext(RID& rid, char *recPtr, int& recLen)
     if(scanIsDone==1){
         return DONE;
     }
-    
-    // directly scan through all data record pages
-    HFPage *currDataPage;
-    status = MINIBASE_BM->pinPage(dataPageId, (Page*&)currDataPage);
-    status = currDataPage->nextRecord(userRid, rid);
-    if(status==OK){
-        status = currDataPage->getRecord(rid, recPtr, recLen);
-        status = MINIBASE_BM->unpinPage(dataPageId);
-    }
-    else{   // reach the end of the record in this page
-        HFPage *nextDataPage;
-        PageId nextDataPageId = currDataPage->getNextPage();
-        if (nextDataPageId==INVALID_PAGE){
-            scanIsDone= 1;
-            status = MINIBASE_BM->unpinPage(dataPageId);
-            return DONE;
-        }
-        status = MINIBASE_BM->pinPage(nextDataPageId, (Page*&)nextDataPage);
-        status = nextDataPage->firstRecord(rid);
-        status = nextDataPage->getRecord(rid, recPtr, recLen);
-        
-        status = MINIBASE_BM->unpinPage(dataPageId);      // unpin curr page
-        status = MINIBASE_BM->unpinPage(nextDataPageId);  // unpin next page
-        
-        // update class member
-        dataPageId = nextDataPageId;
-        dataPage = nextDataPage;
-        
-    }
-    
-    userRid = rid;
-    
+
+	// directly scan through all data record pages
+	HFPage *currDataPage;
+	status = MINIBASE_BM->pinPage(dataPageId, (Page*&)currDataPage);
+	rid = userRid;
+	status = currDataPage->getRecord(rid, recPtr, recLen);
+
+	// update next
+	RID nextRecordid;
+	status = currDataPage->nextRecord(userRid, nextRecordid);
+	if(status==OK){
+		userRid = nextRecordid;
+		status = MINIBASE_BM->unpinPage(dataPageId);
+	}
+	else{   // reach the end of the record in this page
+		HFPage *nextDataPage;
+		PageId nextDataPageId = currDataPage->getNextPage();
+		if (nextDataPageId==INVALID_PAGE){
+			scanIsDone= 1;
+			status = MINIBASE_BM->unpinPage(dataPageId);
+			return DONE;
+		}
+		status = MINIBASE_BM->pinPage(nextDataPageId, (Page*&)nextDataPage);
+		status = nextDataPage->firstRecord(nextRecordid);
+		//status = nextDataPage->getRecord(rid, recPtr, recLen);
+
+		status = MINIBASE_BM->unpinPage(dataPageId);      // unpin curr page
+		status = MINIBASE_BM->unpinPage(nextDataPageId);  // unpin next page
+
+		// update class member
+		dataPageId = nextDataPageId;
+		dataPage = nextDataPage;
+		userRid = nextRecordid;
+
+	}
+
+
     
   return OK;
 }
