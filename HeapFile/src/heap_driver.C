@@ -409,7 +409,7 @@ int HeapDriver::test3()
 int HeapDriver::test4()
 {
     cout << "\n  Test 4: Insert and scan variable-length records\n";
-printf("start 4: all %d, unpinned %d\n",MINIBASE_BM->getNumBuffers(),MINIBASE_BM->getNumUnpinnedBuffers());
+//printf("start 4: all %d, unpinned %d\n",MINIBASE_BM->getNumBuffers(),MINIBASE_BM->getNumUnpinnedBuffers());
     Status status = OK;
     Scan* scan = 0;
     RID rid;
@@ -497,7 +497,7 @@ printf("start 4: all %d, unpinned %d\n",MINIBASE_BM->getNumBuffers(),MINIBASE_BM
 
    if ( status == OK )
      cout << "  Test 4 completed successfully.\n";
-printf("end 4: all %d, unpinned %d\n",MINIBASE_BM->getNumBuffers(),MINIBASE_BM->getNumUnpinnedBuffers());
+//printf("end 4: all %d, unpinned %d\n",MINIBASE_BM->getNumBuffers(),MINIBASE_BM->getNumUnpinnedBuffers());
    return (status == OK);
 }
 

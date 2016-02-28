@@ -5,7 +5,7 @@
 #define _TEST_DRIVER_H_
 
 #include "minirel.h"
-extern "C" int unlink (const char *__name) __THROW __nonnull ((1));
+//extern "C" int unlink (const char *__name) __THROW __nonnull ((1));
 
 class TestDriver
 {

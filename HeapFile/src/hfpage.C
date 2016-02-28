@@ -97,17 +97,10 @@ Status HFPage::insertRecord(char* recPtr, int recLen, RID& rid)
 	this->slot[targetSlot].offset = this->usedPtr - recLen + 1;
 	this->usedPtr -= recLen;
 	memcpy(&this->data[this->slot[targetSlot].offset],recPtr,recLen);
-	//printf("slotNo %d, data offset %d, data len %d\n",targetSlot,this->slot[targetSlot].offset,recLen);
-	//for(int k = 0; k < recLen; k++)
-	//	printf("%c ",this->data[this->slot[targetSlot].offset]);
-	//printf("\n");
+
 	rid.pageNo = this->curPage;
 	rid.slotNo = targetSlot;
-char* tmp = &this->data[this->slot[targetSlot].offset];
-//printf("insert pno %d, sno %d, slotcnt %d\n",this->curPage,targetSlot,this->slotCnt);
-//for(int m = 0; m < recLen; m++)
-//printf("%d ",tmp[m]);
-//printf("\n");
+	//char* tmp = &this->data[this->slot[targetSlot].offset];
 
 	return OK;
 }

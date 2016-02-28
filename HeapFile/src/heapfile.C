@@ -612,7 +612,6 @@ Scan *HeapFile::openScan(Status& status)
 Status HeapFile::deleteFile()
 {
 	Status status;
-//printf("start delete: all %d, unpinned %d\n",MINIBASE_BM->getNumBuffers(),MINIBASE_BM->getNumUnpinnedBuffers());
 	if(file_deleted==0){
 
 		PageId iterate_dirPage = firstDirPageId;
@@ -623,94 +622,93 @@ Status HeapFile::deleteFile()
 		int recLeninDir;
 
 		///////////// traverse all dir pages link list  //////////////
-//		while(iterate_dirPage != INVALID_PAGE){   // when reach Pid=-1 means the end of the linklist
-//
-//			status = MINIBASE_BM->pinPage( iterate_dirPage, (Page* &)currdir );   // read dir page from the disk
-//
-//			// debug
-//			//cout<<"pin_dirPage: "<<iterate_dirPage<<endl;
-//
+		while(iterate_dirPage != INVALID_PAGE){   // when reach Pid=-1 means the end of the linklist
+
+			status = MINIBASE_BM->pinPage( iterate_dirPage, (Page* &)currdir );   // read dir page from the disk
+
+			// debug
+			//cout<<"pin_dirPage: "<<iterate_dirPage<<endl;
+
+			if(status!=OK){
+				return MINIBASE_FIRST_ERROR(HEAPFILE, status);
+			}
+			//printf("file torn down loop \n");
+			// get information from dir page
+			RID recordinPage;
+			RID prevrecordinPage;
+			status = currdir->firstRecord(recordinPage);
+			if(status!=OK){
+				return MINIBASE_FIRST_ERROR(HEAPFILE, NO_RECORDS);
+			}
+
+			///////// traverse all dirinfos in one dir page  ///////////
+			do{
+				//printf("file torn down pno %d, sno %d\n",recordinPage.pageNo,recordinPage.slotNo);
+
+				status = currdir->returnRecord(recordinPage, (char*&)dirinfo, recLeninDir); // read recLeninDir out is useless here
+				if(status!=OK){
+                    MINIBASE_BM->unpinPage(iterate_dirPage);
+					return MINIBASE_FIRST_ERROR(HEAPFILE, NO_RECORDS);
+				}
+
+				HFPage* currpage;
+				status = MINIBASE_BM->pinPage(dirinfo->pageId, (Page* &)currpage );
+				if(status!=OK){
+					return MINIBASE_FIRST_ERROR(HEAPFILE, status);
+				}
+
+				RID DataPageRid;
+				RID prevDataRid;
+				status = currpage->firstRecord(DataPageRid);
+				if(status!=OK){
+                    MINIBASE_BM->unpinPage(iterate_dirPage);
+                    MINIBASE_BM->unpinPage(dirinfo->pageId);
+					return MINIBASE_FIRST_ERROR(HEAPFILE, NO_RECORDS);
+				}
+				do{
+					currpage->deleteRecord(DataPageRid);
+					//printf("data pno %d sno %d\n",DataPageRid.pageNo,DataPageRid.slotNo);
+					//printf("deleted pno %d, sno %d\n",DataPageRid.pageNo,DataPageRid.slotNo);
+					prevDataRid = DataPageRid;
+
+				}
+				while(currpage->nextRecord(prevDataRid, DataPageRid) == OK);
+				////////////////////////////////////////////////////////////////
+
+				status = MINIBASE_BM->unpinPage(dirinfo->pageId,true);
+				if(status!=OK){
+					return MINIBASE_FIRST_ERROR(HEAPFILE, status);
+				}
+
+//				status = MINIBASE_BM->freePage(dirinfo->pageId);
+//				if(status!=OK){
+//					return MINIBASE_FIRST_ERROR(HEAPFILE, status);
+//				}
+
+				currdir->deleteRecord(recordinPage);
+
+
+				prevrecordinPage = recordinPage;     // shallow copy is enough for structure
+
+			}while(currdir->nextRecord(prevrecordinPage,recordinPage)==OK);
+			////////////////////////////////////////////////////////////////
+
+			next = currdir->getNextPage();                       // must record before unpin
+			MINIBASE_BM->unpinPage(iterate_dirPage,true);
+
+			// debug
+			//cout<<"unpin_dirPage: "<<iterate_dirPage<<endl;
+
+//			status = MINIBASE_BM->freePage(iterate_dirPage);       // free dir page
 //			if(status!=OK){
 //				return MINIBASE_FIRST_ERROR(HEAPFILE, status);
 //			}
-//			//printf("file torn down loop \n");
-//			// get information from dir page
-//			RID recordinPage;
-//			RID prevrecordinPage;
-//			status = currdir->firstRecord(recordinPage);
-//			if(status!=OK){
-//				return MINIBASE_FIRST_ERROR(HEAPFILE, NO_RECORDS);
-//			}
-//
-//			///////// traverse all dirinfos in one dir page  ///////////
-//			do{
-//				//printf("file torn down pno %d, sno %d\n",recordinPage.pageNo,recordinPage.slotNo);
-//
-//				status = currdir->returnRecord(recordinPage, (char*&)dirinfo, recLeninDir); // read recLeninDir out is useless here
-//				if(status!=OK){
-//                    MINIBASE_BM->unpinPage(iterate_dirPage);
-//					return MINIBASE_FIRST_ERROR(HEAPFILE, NO_RECORDS);
-//				}
-//
-//				HFPage* currpage;
-//				status = MINIBASE_BM->pinPage(dirinfo->pageId, (Page* &)currpage );
-//				if(status!=OK){
-//					return MINIBASE_FIRST_ERROR(HEAPFILE, status);
-//				}
-//
-//				RID DataPageRid;
-//				RID prevDataRid;
-//				status = currpage->firstRecord(DataPageRid);
-//				if(status!=OK){
-//                    MINIBASE_BM->unpinPage(iterate_dirPage);
-//                    MINIBASE_BM->unpinPage(dirinfo->pageId);
-//					return MINIBASE_FIRST_ERROR(HEAPFILE, NO_RECORDS);
-//				}
-//				do{
-//					currpage->deleteRecord(DataPageRid);
-//					//printf("data pno %d sno %d\n",DataPageRid.pageNo,DataPageRid.slotNo);
-//					//printf("deleted pno %d, sno %d\n",DataPageRid.pageNo,DataPageRid.slotNo);
-//					prevDataRid = DataPageRid;
-//
-//				}
-//				while(currpage->nextRecord(prevDataRid, DataPageRid) == OK);
-//				////////////////////////////////////////////////////////////////
-//
-//				status = MINIBASE_BM->unpinPage(dirinfo->pageId,true);
-//				if(status!=OK){
-//					return MINIBASE_FIRST_ERROR(HEAPFILE, status);
-//				}
-//
-////				status = MINIBASE_BM->freePage(dirinfo->pageId);
-////				if(status!=OK){
-////					return MINIBASE_FIRST_ERROR(HEAPFILE, status);
-////				}
-//
-//				currdir->deleteRecord(recordinPage);
-//
-//
-//				prevrecordinPage = recordinPage;     // shallow copy is enough for structure
-//
-//			}while(currdir->nextRecord(prevrecordinPage,recordinPage)==OK);
-//			////////////////////////////////////////////////////////////////
-//
-//			next = currdir->getNextPage();                       // must record before unpin
-//			MINIBASE_BM->unpinPage(iterate_dirPage,true);
-//
-//			// debug
-//			//cout<<"unpin_dirPage: "<<iterate_dirPage<<endl;
-//
-////			status = MINIBASE_BM->freePage(iterate_dirPage);       // free dir page
-////			if(status!=OK){
-////				return MINIBASE_FIRST_ERROR(HEAPFILE, status);
-////			}
-//
-//			iterate_dirPage = next;
-//			//firstDirPageId = next;
-//		}
+
+			iterate_dirPage = next;
+			//firstDirPageId = next;
+		}
 		//MINIBASE_BM->unpinPage(firstDirPageId,true);
 		file_deleted =1;
-//printf("end delete: all %d, unpinned %d\n",MINIBASE_BM->getNumBuffers(),MINIBASE_BM->getNumUnpinnedBuffers());
 		status = MINIBASE_DB->delete_file_entry(fileName);
 		if(status!=OK){
 			return MINIBASE_FIRST_ERROR(HEAPFILE, status);
