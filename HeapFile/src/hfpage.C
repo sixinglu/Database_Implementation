@@ -24,7 +24,8 @@ void HFPage::init(PageId pageNo)
 	this->slotCnt = 0;
 	this->curPage = pageNo;
 	this->usedPtr = MAX_SPACE - DPFIXED - 1;
-	this->freeSpace = MAX_SPACE - DPFIXED;
+	this->freeSpace = MAX_SPACE - DPFIXED + sizeof(slot_t);
+
 }
 
 // **********************************************************
@@ -35,7 +36,7 @@ void HFPage::dumpPage()
 
 	cout << "dumpPage, this: " << this << endl;
 	cout << "curPage= " << curPage << ", nextPage=" << nextPage << endl;
-	cout << "usedPtr=" << usedPtr << ",  freeSpace=" << freeSpace
+	cout << "usedPtr=" << usedPtr + 1 << ",  freeSpace=" << freeSpace// + DPFIXED
 		<< ", slotCnt=" << slotCnt << endl;
 
 	for (i=0; i < slotCnt; i++) {
