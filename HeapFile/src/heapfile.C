@@ -55,7 +55,7 @@ HeapFile::HeapFile( const char *name, Status& returnStatus )
 // Destructor
 HeapFile::~HeapFile()
 {
-	if(file_deleted==1){  // still exist
+	if(file_deleted==0){  // still exist
 		if(fileName==NULL){
 			deleteFile();
 		}
@@ -63,6 +63,10 @@ HeapFile::~HeapFile()
 			MINIBASE_BM->flushAllPages();
 		}
 	}
+	else{
+		MINIBASE_BM->flushAllPages();
+	}
+
 
 }
 
