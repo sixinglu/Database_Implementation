@@ -36,6 +36,7 @@ static error_string_table bufTable(BUFMGR,bufErrMsgs);
 
 BufMgr::BufMgr (int numbuf, Replacer *replacer) {
   // put your code here
+    this->numBuffers = numbuf;
 }
 
 //*************************************************************
