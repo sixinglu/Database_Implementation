@@ -11,12 +11,17 @@
 #include "new_error.h"
 #include <vector>
 #include <queue>
+#include <math.h>
 
 #define NUMBUF 20   
 // Default number of frames, artifically small number for ease of debugging.
 
 #define HTSIZE 7
 // Hash Table size
+
+#define HASH_a 1
+#define HASH_b 1
+
 
 using namespace std;
 
@@ -42,10 +47,11 @@ private:
    unsigned int    numBuffers;
     
    // the followings private numbers are defined according to requirement on 2016-03-10
-   vector<descriptors> bufDescr;
+    
+   vector<descriptors> bufDescr;  // each one in bufDescr maps to each element in bufPool
     
    // vector of <page number, frame number>
-   vector< pair<PageId,unsigned> > directory;  // the hash table, the reason I do not use array and linked list is vector is easy to add and remove elments (no need to release also), plus I love pair
+   vector< vector<pair<PageId,unsigned> > > directory;  // the hash table, the reason I do not use array and linked list is vector is easy to add and remove elments (no need to release also), plus I love pair
    
    // LRU list of <frame number, hate>, peek top, pop using queue. remove the according one in MRU by earse
    queue< pair<unsigned,int> > LRUlist;

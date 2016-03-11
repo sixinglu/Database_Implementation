@@ -14,10 +14,10 @@ using namespace std;
 // Define error message here
 static const char* bufErrMsgs[] = { 
   // error message strings go here
-  "Not enough memory to allocate hash entry",
-  "Inserting a duplicate entry in the hash table",
-  "Removing a non-existing entry from the hash table",
-  "Page not in hash table",
+  "Not enough memory to allocate hash entry",  
+  "Inserting a duplicate entry in the hash table",  //1
+  "Removing a non-existing entry from the hash table",  //2
+  "Page not in hash table", //3
   "Not enough memory to allocate queue node",
   "Poping an empty queue",
   "OOOOOOPS, something is wrong",
@@ -56,31 +56,47 @@ BufMgr::BufMgr (int numbuf, Replacer *replacer) {
 //** return hash index in directroy
 //************************************************************
 unsigned BufMgr::hash(PageId PID){
-    unsigned frameNUM = -1;
     
-    
-    return frameNUM;
+    return (HASH_a*PID+HASH_b)%HTSIZE;
 }
 
 //*************************************************************
 //** search the frame number through hash directory
-//** return frame number
+//** return frame number, if -1 NOT FOUND
 //************************************************************
 unsigned BufMgr::SearchPage(PageId PID){
-    unsigned frameNUM = -1;
     
+    unsigned frameNUM = -1;
+    unsigned index = hash(PID);
+    
+    for(unsigned i =0; i<directory.at(index).size(); i++){
+        if(directory.at(index).at(i).first==PID){
+            return directory.at(index).at(i).second;
+        }
+    }
+    
+    if(frameNUM==-1){
+        cout<<bufErrMsgs[3]<<endl;
+    }
     
     return frameNUM;
 }
 
 //*************************************************************
 //** add a index in hash table after insert a page
-//** return status
+//** return status, if already in buffer, return DONE
 //************************************************************
 Status BufMgr::HashAdd(PageId PID, unsigned frameNUM){
+    
     Status status = OK;
+    unsigned index = hash(PID);
     
+    if(SearchPage(PID)!=-1){  // if already exists
+        cout<<bufErrMsgs[1]<<endl;
+        return DONE;
+    }
     
+    directory.at(index).push_back(make_pair(PID, frameNUM));
     return status;
 }
 
@@ -89,8 +105,22 @@ Status BufMgr::HashAdd(PageId PID, unsigned frameNUM){
 //** return status
 //************************************************************
 Status BufMgr::HashDelete(PageId PID){
-    Status status = OK;
     
+    Status status = OK;
+    unsigned index = hash(PID);
+    unsigned i =0;
+    
+    for(i =0; i<directory.at(index).size(); i++){
+        if(directory.at(index).at(i).first==PID){
+            directory.at(index).erase(directory.at(index).begin()+i);
+            break;
+        }
+    }
+    
+    if(i>=directory.at(index).size()){ // if not exist
+        cout<<bufErrMsgs[2]<<endl;
+        return DONE;
+    }
     
     return status;
 }
