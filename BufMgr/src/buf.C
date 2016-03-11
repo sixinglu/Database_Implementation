@@ -6,6 +6,8 @@
 #include "buf.h"
 
 
+using namespace std;
+
 // Define buffer manager error messages here
 //enum bufErrCodes  {...};
 
@@ -35,9 +37,66 @@ static error_string_table bufTable(BUFMGR,bufErrMsgs);
 //************************************************************
 
 BufMgr::BufMgr (int numbuf, Replacer *replacer) {
-  // put your code here
+    
     this->numBuffers = numbuf;
+    this->bufPool = new Page[numBuffers];
+    
+    for(unsigned i =0; i<numbuf; i++){
+        descriptors Pagedescr;
+        Pagedescr.page_number = INVALID_PAGE;
+        Pagedescr.dirtybit = false;
+        Pagedescr.pin_count = 0;
+        bufDescr.push_back(Pagedescr);
+    }
+    
 }
+
+//*************************************************************
+//** hash function to map the PageID to the bucket
+//** return hash index in directroy
+//************************************************************
+unsigned BufMgr::hash(PageId PID){
+    unsigned frameNUM = -1;
+    
+    
+    return frameNUM;
+}
+
+//*************************************************************
+//** search the frame number through hash directory
+//** return frame number
+//************************************************************
+unsigned BufMgr::SearchPage(PageId PID){
+    unsigned frameNUM = -1;
+    
+    
+    return frameNUM;
+}
+
+//*************************************************************
+//** add a index in hash table after insert a page
+//** return status
+//************************************************************
+Status BufMgr::HashAdd(PageId PID, unsigned frameNUM){
+    Status status = OK;
+    
+    
+    return status;
+}
+
+//*************************************************************
+//** delete the index in hash table after delete a page
+//** return status
+//************************************************************
+Status BufMgr::HashDelete(PageId PID){
+    Status status = OK;
+    
+    
+    return status;
+}
+
+
+
 
 //*************************************************************
 //** This is the implementation of ~BufMgr

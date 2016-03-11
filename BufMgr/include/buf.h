@@ -9,6 +9,8 @@
 #include "db.h"
 #include "page.h"
 #include "new_error.h"
+#include <vector>
+#include <queue>
 
 #define NUMBUF 20   
 // Default number of frames, artifically small number for ease of debugging.
@@ -16,7 +18,7 @@
 #define HTSIZE 7
 // Hash Table size
 
-
+using namespace std;
 
 /*******************ALL BELOW are purely local to buffer Manager********/
 
@@ -24,15 +26,49 @@
 enum bufErrCodes  {HASHMEMORY, HASHDUPLICATEINSERT, HASHREMOVEERROR, HASHNOTFOUND, QMEMORYERROR, QEMPTY, INTERNALERROR, 
 			BUFFERFULL, BUFMGRMEMORYERROR, BUFFERPAGENOTFOUND, BUFFERPAGENOTPINNED, BUFFERPAGEPINNED};
 
+class descriptors{
+public:
+    PageId page_number;
+    int pin_count;
+    bool dirtybit;
+};
+
+
 class Replacer; // may not be necessary as described below in the constructor
 
 class BufMgr {
 
 private: 
    unsigned int    numBuffers;
+    
+   // the followings private numbers are defined according to requirement on 2016-03-10
+   vector<descriptors> bufDescr;
+    
+   // vector of <page number, frame number>
+   vector< pair<PageId,unsigned> > directory;  // the hash table, the reason I do not use array and linked list is vector is easy to add and remove elments (no need to release also), plus I love pair
+   
+   // LRU list of <frame number, hate>, peek top, pop using queue. remove the according one in MRU by earse
+   queue< pair<unsigned,int> > LRUlist;
+    
+   // MRU list of <frame number, hate>, peek top, pop using vector. remove the according one in LRU by earse
+   vector< pair<unsigned,int> > MRUlist;
+    
+    // return hash index in directroy
+    unsigned hash(PageId PID);
+    
+    // return frame number
+    unsigned SearchPage(PageId PID);
+    
+    // add a page into directory
+    Status HashAdd(PageId PID, unsigned frameNUM);
+    
+    // delete a page in the directory
+    Status HashDelete(PageId PID);
+    
+    
    // fill in this area
 public:
-    Page* bufPool; // The actual buffer pool
+    Page* bufPool; // The actual buffer pool       the index is fram number
 
     BufMgr (int numbuf, Replacer *replacer = 0); 
    	// Initializes a buffer manager managing "numbuf" buffers.
