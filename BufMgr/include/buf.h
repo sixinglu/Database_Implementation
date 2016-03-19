@@ -39,13 +39,35 @@ public:
 };
 
 
-class Replacer; // may not be necessary as described below in the constructor
+class Replacer {
+
+  public:
+    virtual int pin( int frameNo );
+    virtual int unpin( int frameNo );
+    virtual int free( int frameNo );
+    virtual int pick_victim() = 0;     // Must pin the returned frame.
+    virtual const char *name() = 0;
+    virtual void info();
+
+    unsigned getNumUnpinnedBuffers();
+
+  protected:
+    Replacer();
+    virtual ~Replacer();
+
+    enum STATE {Available, Referenced, Pinned};
+
+    BufMgr *mgr;
+    friend class BufMgr;
+    virtual void setBufferManager( BufMgr *mgr );
+
+}; // may not be necessary as described below in the constructor
 
 class BufMgr {
 
 private: 
    unsigned int    numBuffers;
-    
+   Replacer* replacer_holder;
    // the followings private numbers are defined according to requirement on 2016-03-10
     
    vector<descriptors> bufDescr;  // each one in bufDescr maps to each element in bufPool
@@ -63,7 +85,7 @@ private:
     unsigned hash(PageId PID);
     
     // return frame number
-    unsigned SearchPage(PageId PID);
+    int SearchPage(PageId PID);
     
     // add a page into directory
     Status HashAdd(PageId PID, unsigned frameNUM);

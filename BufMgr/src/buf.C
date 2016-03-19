@@ -40,12 +40,15 @@ BufMgr::BufMgr (int numbuf, Replacer *replacer) {
     
     this->numBuffers = numbuf;
     this->bufPool = new Page[numBuffers];
-    
-    for(unsigned i =0; i<numbuf; i++){
+    this->replacer_holder = replacer;
+   //vector<int> bufDescr2(4,100);
+    for(int i =0; i<numbuf; i++){
         descriptors Pagedescr;
         Pagedescr.page_number = INVALID_PAGE;
         Pagedescr.dirtybit = false;
         Pagedescr.pin_count = 0;
+	//cout<<bufDescr.size()<<endl;
+	//bufDescr2.push_back(1);
         bufDescr.push_back(Pagedescr);
     }
     
@@ -64,11 +67,11 @@ unsigned BufMgr::hash(PageId PID){
 //** search the frame number through hash directory
 //** return frame number, if -1 NOT FOUND
 //************************************************************
-unsigned BufMgr::SearchPage(PageId PID){
+int BufMgr::SearchPage(PageId PID){
     
-    unsigned frameNUM = -1;
+    int frameNUM = -1;
     unsigned index = hash(PID);
-    
+    cout<<index<<' '<<directory.capacity()<<endl;
     for(unsigned i =0; i<directory.at(index).size(); i++){
         if(directory.at(index).at(i).first==PID){
             return directory.at(index).at(i).second;
@@ -140,6 +143,58 @@ BufMgr::~BufMgr(){
 //************************************************************
 Status BufMgr::pinPage(PageId PageId_in_a_DB, Page*& page, int emptyPage) {
   // put your code here
+        // Check if this page is in buffer pool, otherwise
+        // find a frame for this page, read in and pin it.
+        // also write out the old page if it's dirty before reading
+        // if emptyPage==TRUE, then actually no read is done to bring
+        // the page
+printf("pinnnnnnnnnnn\n");
+	Status status;
+	int frame = SearchPage(PageId_in_a_DB);
+	if( frame != -1){	
+		printf("already in\n");
+		bufDescr[frame].pin_count ++;
+		//inform replacer of this pin
+		replacer_holder->pin(frame);
+		//actual return page
+		page = &bufPool[frame];
+	}
+	else {
+		int victim = replacer_holder->pick_victim();
+		if(victim == -1)
+			return MINIBASE_FIRST_ERROR( BUFMGR, BUFFERFULL );
+		if(bufDescr[victim].page_number != INVALID_PAGE){
+			//update directory
+			HashDelete(bufDescr[victim].page_number);
+		}
+		if(bufDescr[victim].dirtybit == 1){
+			//write back
+			status = MINIBASE_DB->write_page(bufDescr[victim].page_number, &bufPool[victim]);
+			if(status != OK)
+				return MINIBASE_CHAIN_ERROR(BUFMGR, status);
+		}
+		//update directory
+		HashAdd(PageId_in_a_DB,victim);
+		//pin the new page first before reading it in
+		bufDescr[victim].page_number = PageId_in_a_DB;
+		bufDescr[victim].pin_count = 1;
+		bufDescr[victim].dirtybit = 0;
+		//inform replacer of this pin
+		replacer_holder->pin(victim);
+		if(emptyPage == 0){
+			//read in something
+			status = MINIBASE_DB->read_page(PageId_in_a_DB, &bufPool[victim]);	
+			if(status != OK)
+			{//undo if error occurs
+				bufDescr[victim].page_number = INVALID_PAGE;
+				bufDescr[victim].dirtybit = 0;
+				bufDescr[victim].pin_count--;
+				return MINIBASE_CHAIN_ERROR(BUFMGR, status);
+			}
+		}
+		//actual return page
+		page = &bufPool[victim];
+	}
   return OK;
 }//end pinPage
 
@@ -190,6 +245,9 @@ Status BufMgr::flushAllPages(){
 //************************************************************
 Status BufMgr::pinPage(PageId PageId_in_a_DB, Page*& page, int emptyPage, const char *filename){
   //put your code here
+printf("here i am1\n");
+pinPage(PageId_in_a_DB,page,emptyPage);
+printf("here i am2\n");
   return OK;
 }
 
