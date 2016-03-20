@@ -165,40 +165,54 @@ printf("pinnnnnnnnnnn\n");
 	}
 	else {
 
-		if(victim == -1)
-			return MINIBASE_FIRST_ERROR( BUFMGR, BUFFERFULL );
-		if(bufDescr[victim].page_number != INVALID_PAGE){
-			//update directory
-			HashDelete(bufDescr[victim].page_number);
-		}
-		if(bufDescr[victim].dirtybit == 1){
-			//write back
-			status = MINIBASE_DB->write_page(bufDescr[victim].page_number, &bufPool[victim]);
-			if(status != OK)
-				return MINIBASE_CHAIN_ERROR(BUFMGR, status);
-		}
-		//update directory
-		HashAdd(PageId_in_a_DB,victim);
-		//pin the new page first before reading it in
-		bufDescr[victim].page_number = PageId_in_a_DB;
-		bufDescr[victim].pin_count = 1;
-		bufDescr[victim].dirtybit = 0;
-		if(emptyPage == 0){
-			//read in something
-			status = MINIBASE_DB->read_page(PageId_in_a_DB, &bufPool[victim]);	
-			if(status != OK)
-			{//undo if error occurs
-				bufDescr[victim].page_number = INVALID_PAGE;
-				bufDescr[victim].dirtybit = 0;
-				bufDescr[victim].pin_count--;
-				return MINIBASE_CHAIN_ERROR(BUFMGR, status);
-			}
-		}
+//		if(victim == -1)
+//			return MINIBASE_FIRST_ERROR( BUFMGR, BUFFERFULL );
+//		if(bufDescr[victim].page_number != INVALID_PAGE){
+//			//update directory
+//			HashDelete(bufDescr[victim].page_number);
+//		}
+//		if(bufDescr[victim].dirtybit == 1){
+//			//write back
+//			status = MINIBASE_DB->write_page(bufDescr[victim].page_number, &bufPool[victim]);
+//			if(status != OK)
+//				return MINIBASE_CHAIN_ERROR(BUFMGR, status);
+//		}
+//		//update directory
+//		HashAdd(PageId_in_a_DB,victim);
+//		//pin the new page first before reading it in
+//		bufDescr[victim].page_number = PageId_in_a_DB;
+//		bufDescr[victim].pin_count = 1;
+//		bufDescr[victim].dirtybit = 0;
+//		if(emptyPage == 0){
+//			//read in something
+//			status = MINIBASE_DB->read_page(PageId_in_a_DB, &bufPool[victim]);	
+//			if(status != OK)
+//			{//undo if error occurs
+//				bufDescr[victim].page_number = INVALID_PAGE;
+//				bufDescr[victim].dirtybit = 0;
+//				bufDescr[victim].pin_count--;
+//				return MINIBASE_CHAIN_ERROR(BUFMGR, status);
+//			}
+		//}
 		//actual return page
-		page = &bufPool[victim];
+		//page = &bufPool[victim];
 	}
   return OK;
 }//end pinPage
+
+//*************************************************************
+//** pick the viction frame
+//** return Love_Hate = 0: LRUlist, Love_Hate = 1: MRUlist
+//** return MRU_LRU_index, frameID
+//************************************************************
+Status BufMgr::findReplaceFrame(int &Love_Hate, unsigned &MRU_LRU_index, unsigned &frameID)
+{
+    
+    
+    return OK;
+    
+}
+
 
 //*************************************************************
 //** This is the implementation of unpinPage

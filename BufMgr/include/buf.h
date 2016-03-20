@@ -38,30 +38,31 @@ public:
     bool dirtybit;
 };
 
-
-class Replacer {
-
-  public:
-    virtual int pin( int frameNo );
-    virtual int unpin( int frameNo );
-    virtual int free( int frameNo );
-    virtual int pick_victim() = 0;     // Must pin the returned frame.
-    virtual const char *name() = 0;
-    virtual void info();
-
-    unsigned getNumUnpinnedBuffers();
-
-  protected:
-    Replacer();
-    virtual ~Replacer();
-
-    enum STATE {Available, Referenced, Pinned};
-
-    BufMgr *mgr;
-    friend class BufMgr;
-    virtual void setBufferManager( BufMgr *mgr );
-
-}; // may not be necessary as described below in the constructor
+//
+class Replacer;
+//{
+//
+//  public:
+//    virtual int pin( int frameNo );
+//    virtual int unpin( int frameNo );
+//    virtual int free( int frameNo );
+//    virtual int pick_victim() = 0;     // Must pin the returned frame.
+//    virtual const char *name() = 0;
+//    virtual void info();
+//
+//    unsigned getNumUnpinnedBuffers();
+//
+//  protected:
+//    Replacer();
+//    virtual ~Replacer();
+//
+//    enum STATE {Available, Referenced, Pinned};
+//
+//    BufMgr *mgr;
+//    friend class BufMgr;
+//    virtual void setBufferManager( BufMgr *mgr );
+//
+//}; // may not be necessary as described below in the constructor
 
 class BufMgr {
 
@@ -75,10 +76,10 @@ private:
    vector< vector<pair<PageId,unsigned> > > directory;  // the hash table, the reason I do not use array and linked list is vector is easy to add and remove elments (no need to release also), plus I love pair
    
    // LRU list of <frame number, hate>, peek top, pop using queue. remove the according one in MRU by earse
-   queue< pair<unsigned,int> > LRUlist;
+   vector< pair<unsigned,int> > LRUlist;  // loved pages
     
    // MRU list of <frame number, hate>, peek top, pop using vector. remove the according one in LRU by earse
-   vector< pair<unsigned,int> > MRUlist;
+   vector< pair<unsigned,int> > MRUlist;  // hated pages
     
     // return hash index in directroy
     unsigned hash(PageId PID);
@@ -92,6 +93,8 @@ private:
     // delete a page in the directory
     Status HashDelete(PageId PID);
     
+    //
+    Status findReplaceFrame(int &Love_Hate, unsigned &MRU_LRU_index, unsigned &frameID);
     
    // fill in this area
 public:
