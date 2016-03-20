@@ -35,7 +35,7 @@ class descriptors{
 public:
     PageId page_number;
     int pin_count;
-    bool dirtybit;
+    bool dirtybit;  // true is dirty
 };
 
 //
@@ -75,11 +75,11 @@ private:
    // vector of <page number, frame number>
    vector< vector<pair<PageId,unsigned> > > directory;  // the hash table, the reason I do not use array and linked list is vector is easy to add and remove elments (no need to release also), plus I love pair
    
-   // LRU list of <frame number, hate>, peek top, pop using queue. remove the according one in MRU by earse
-   vector< pair<unsigned,int> > LRUlist;  // loved pages
+   // LRU list of <frame number>, peek top, pop using queue. remove the according one in MRU by earse
+   vector< unsigned > LRUlist;  // loved pages
     
-   // MRU list of <frame number, hate>, peek top, pop using vector. remove the according one in LRU by earse
-   vector< pair<unsigned,int> > MRUlist;  // hated pages
+   // MRU list of <frame number>, peek top, pop using vector. remove the according one in LRU by earse
+   vector< unsigned > MRUlist;  // hated pages
     
     // return hash index in directroy
     unsigned hash(PageId PID);
@@ -93,7 +93,8 @@ private:
     // delete a page in the directory
     Status HashDelete(PageId PID);
     
-    //
+    // love/hate replacement policy. remember to flush if dirty
+    // if return DONE, there is no availble frame
     Status findReplaceFrame(int &Love_Hate, unsigned &MRU_LRU_index, unsigned &frameID);
     
    // fill in this area

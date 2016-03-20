@@ -201,15 +201,40 @@ printf("pinnnnnnnnnnn\n");
 }//end pinPage
 
 //*************************************************************
-//** pick the viction frame
+//** If a page is needed for replacement, the buffer manager
+//** selects from the list of hated pages first and then from
+//** the loved pages if no hated   ones exist.
 //** return Love_Hate = 0: LRUlist, Love_Hate = 1: MRUlist
 //** return MRU_LRU_index, frameID
 //************************************************************
 Status BufMgr::findReplaceFrame(int &Love_Hate, unsigned &MRU_LRU_index, unsigned &frameID)
 {
     
+    // search hated pages firstly, MRUlist, FILO
+    for(int i=(int)MRUlist.size()-1; i>=0; i--){  // must use int, otherwise unsigned number >0 forever
+        unsigned frame =  MRUlist.at(i);
+        if(bufDescr.at(frame).pin_count==0){  // not in use else where
+            Love_Hate = 1;
+            MRU_LRU_index = i;
+            frameID = frame;
+            return OK;
+        }
+    }
     
-    return OK;
+    // search loved page secondly if no hated frame available, LRUlist, FIFO
+    for(unsigned i =0; i<LRUlist.size(); i++){
+        unsigned frame = LRUlist.at(i);
+        if(bufDescr.at(frame).pin_count==0){  // not in use else where
+            Love_Hate = 0;
+            MRU_LRU_index = i;
+            frameID = frame;
+            return OK;
+        }
+    }
+    
+    
+    // no frame available, all pined some other places
+    return DONE;
     
 }
 
