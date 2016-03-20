@@ -52,6 +52,13 @@ BufMgr::BufMgr (int numbuf, Replacer *replacer) {
         bufDescr.push_back(Pagedescr);
     }
     
+    
+    for(int j=0; j < HTSIZE; j++){
+        vector<pair<PageId,unsigned> > temp(0);
+        directory.push_back(temp);
+    }
+    
+    
 }
 
 //*************************************************************
@@ -60,7 +67,7 @@ BufMgr::BufMgr (int numbuf, Replacer *replacer) {
 //************************************************************
 unsigned BufMgr::hash(PageId PID){
     
-    return (HASH_a*PID+HASH_b)%HTSIZE;
+    return (unsigned)(HASH_a*PID+HASH_b)%HTSIZE;
 }
 
 //*************************************************************
@@ -72,6 +79,7 @@ int BufMgr::SearchPage(PageId PID){
     int frameNUM = -1;
     unsigned index = hash(PID);
     cout<<index<<' '<<directory.capacity()<<endl;
+    
     for(unsigned i =0; i<directory.at(index).size(); i++){
         if(directory.at(index).at(i).first==PID){
             return directory.at(index).at(i).second;
