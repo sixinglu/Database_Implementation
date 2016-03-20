@@ -40,7 +40,6 @@ BufMgr::BufMgr (int numbuf, Replacer *replacer) {
     
     this->numBuffers = numbuf;
     this->bufPool = new Page[numBuffers];
-    this->replacer_holder = replacer;
    //vector<int> bufDescr2(4,100);
     for(int i =0; i<numbuf; i++){
         descriptors Pagedescr;
@@ -162,13 +161,10 @@ printf("pinnnnnnnnnnn\n");
 	if( frame != -1){	
 		printf("already in\n");
 		bufDescr[frame].pin_count ++;
-		//inform replacer of this pin
-		replacer_holder->pin(frame);
-		//actual return page
 		page = &bufPool[frame];
 	}
 	else {
-		int victim = replacer_holder->pick_victim();
+
 		if(victim == -1)
 			return MINIBASE_FIRST_ERROR( BUFMGR, BUFFERFULL );
 		if(bufDescr[victim].page_number != INVALID_PAGE){
@@ -187,8 +183,6 @@ printf("pinnnnnnnnnnn\n");
 		bufDescr[victim].page_number = PageId_in_a_DB;
 		bufDescr[victim].pin_count = 1;
 		bufDescr[victim].dirtybit = 0;
-		//inform replacer of this pin
-		replacer_holder->pin(victim);
 		if(emptyPage == 0){
 			//read in something
 			status = MINIBASE_DB->read_page(PageId_in_a_DB, &bufPool[victim]);	

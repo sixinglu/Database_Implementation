@@ -67,7 +67,6 @@ class BufMgr {
 
 private: 
    unsigned int    numBuffers;
-   Replacer* replacer_holder;
    // the followings private numbers are defined according to requirement on 2016-03-10
     
    vector<descriptors> bufDescr;  // each one in bufDescr maps to each element in bufPool
