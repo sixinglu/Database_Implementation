@@ -332,7 +332,7 @@ Status BufMgr::unpinPage(PageId page_num, int dirty=FALSE, int hate = FALSE){
 			    MRUlist.push_back(frame);
 		}
 	}
-
+/*
 	for(unsigned i =0; i<LRUlist.size(); i++){
 	cout<<LRUlist.at(i)<<' ';
 	}
@@ -341,24 +341,51 @@ Status BufMgr::unpinPage(PageId page_num, int dirty=FALSE, int hate = FALSE){
 	cout<<MRUlist.at(i)<<' ';
 	}
 	cout<<endl;
-
+*/
   return OK;
 }
 
 //*************************************************************
 //** This is the implementation of newPage
 //************************************************************
-Status BufMgr::newPage(PageId& firstPageId, Page*& firstpage, int howmany) {
+        // call DB object to allocate a run of new pages and 
+        // find a frame in the buffer pool for the first page
+        // and pin it. If buffer is full, ask DB to deallocate 
+        // all these pages and return error
+Status BufMgr::newPage(PageId& firstPageId, Page*& firstpage, int howmany ) {
   // put your code here
+	Status status;
+	status = MINIBASE_DB->allocate_page(firstPageId, howmany);
+	if(status != OK)
+		return MINIBASE_FIRST_ERROR(BUFMGR, INTERNALERROR);
+	status = pinPage(firstPageId, firstpage, TRUE);
+	if(status != OK){
+		MINIBASE_DB->deallocate_page(firstPageId, howmany);
+		return MINIBASE_FIRST_ERROR(BUFMGR, INTERNALERROR);
+		}
+	
   return OK;
 }
 
 //*************************************************************
 //** This is the implementation of freePage
 //************************************************************
+        // User should call this method if it needs to delete a page
+        // this routine will call DB to deallocate the page 
+
 Status BufMgr::freePage(PageId globalPageId){
-  // put your code here
-  return OK;
+	int frame = SearchPage(globalPageId);
+
+	if( frame != -1){	
+		//printf("frame %d already in\n",frame);
+		if(frame < 0 || frame >= (int)numBuffers)
+                	return MINIBASE_FIRST_ERROR(BUFMGR, BUFFERPAGENOTPINNED);
+		if(bufDescr[frame].pin_count > 0 || bufDescr[frame].page_number == INVALID_PAGE)
+			return DONE;
+		MINIBASE_DB->deallocate_page(globalPageId);
+			return OK;
+	}
+	return MINIBASE_FIRST_ERROR(BUFMGR, BUFFERPAGENOTPINNED);
 }
 
 //*************************************************************
