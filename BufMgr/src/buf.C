@@ -261,10 +261,10 @@ Status BufMgr::findReplaceFrame(int &Love_Hate, unsigned &MRU_LRU_index, int &fr
     
     // search loved page secondly if no hated frame available, LRUlist, FIFO
     for(unsigned i =0; i<LRUlist.size(); i++){
-        unsigned frame = LRUlist.at(i);
+        unsigned frame = LRUlist.at(LRUlist.size() - i - 1);
         if(bufDescr.at(frame).pin_count==0){  // not in use else where
             Love_Hate = 0;
-            MRU_LRU_index = i;
+            MRU_LRU_index = LRUlist.size() - i - 1;
             frameID = frame;
             return OK;
         }
@@ -332,7 +332,7 @@ Status BufMgr::unpinPage(PageId page_num, int dirty=FALSE, int hate = FALSE){
 			    MRUlist.push_back(frame);
 		}
 	}
-/*
+
 	for(unsigned i =0; i<LRUlist.size(); i++){
 	cout<<LRUlist.at(i)<<' ';
 	}
@@ -341,7 +341,7 @@ Status BufMgr::unpinPage(PageId page_num, int dirty=FALSE, int hate = FALSE){
 	cout<<MRUlist.at(i)<<' ';
 	}
 	cout<<endl;
-*/
+
   return OK;
 }
 
