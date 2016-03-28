@@ -157,7 +157,7 @@ Status BufMgr::HashDelete(PageId PID){
 //** This is the implementation of ~BufMgr
 //************************************************************
 BufMgr::~BufMgr(){
-  // put your code here
+	this->flushAllPages();
 }
 
 //*************************************************************
@@ -299,6 +299,7 @@ Status BufMgr::unpinPage(PageId page_num, int dirty=FALSE, int hate = FALSE){
 	else{
 		return MINIBASE_FIRST_ERROR( BUFMGR, HASHNOTFOUND);
 		}
+
 	if(bufDescr[frame].pin_count == 0){
 		bufDescr[frame].dirtybit = dirty;
 		if(hate == FALSE){//go to lrulist
@@ -393,15 +394,48 @@ Status BufMgr::freePage(PageId globalPageId){
 //************************************************************
 Status BufMgr::flushPage(PageId pageid) {
   // put your code here
-  return OK;
+    
+    Status status = OK;
+    
+    int frame = SearchPage(pageid);
+    
+    if(frame!=-1) {
+        if(frame < 0 || frame >= (int)numBuffers)
+            return MINIBASE_FIRST_ERROR(BUFMGR, BUFFERPAGENOTPINNED);
+        
+        if(bufDescr[frame].pin_count > 0 || bufDescr[frame].page_number == INVALID_PAGE)
+            return DONE;
+        
+        if (bufDescr[frame].dirtybit==true){
+            status = MINIBASE_DB->write_page(bufDescr[frame].page_number, &bufPool[frame]);
+            if(status != OK)
+                return MINIBASE_CHAIN_ERROR(BUFMGR, status);
+        }
+    }
+    
+    
+    return status;
 }
     
 //*************************************************************
 //** This is the implementation of flushAllPages
 //************************************************************
 Status BufMgr::flushAllPages(){
-  //put your code here
-  return OK;
+  
+    Status status = OK;
+    
+    for(unsigned i =0; i< bufDescr.size(); i++){
+        if(bufDescr[i].pin_count > 0)
+            continue;
+        
+        if (bufDescr[i].dirtybit==true){
+            status = MINIBASE_DB->write_page(bufDescr[i].page_number, &bufPool[i]);
+            if(status != OK)
+                return MINIBASE_CHAIN_ERROR(BUFMGR, status);
+        }
+    }
+    
+    return status;
 }
 
 
@@ -429,6 +463,13 @@ Status unpinPage(PageId globalPageId_in_a_DB, int dirty, const char *filename){
 //** This is the implementation of getNumUnpinnedBuffers
 //************************************************************
 unsigned int BufMgr::getNumUnpinnedBuffers(){
-  //put your code here
-  return 0;
+  
+    unsigned result = 0;
+    for(unsigned i =0; i< bufDescr.size(); i++){
+        if(bufDescr[i].pin_count == 0){
+            result++;
+        }
+    }
+    
+    return result;
 }

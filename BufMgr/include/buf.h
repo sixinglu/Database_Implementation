@@ -95,10 +95,13 @@ private:
     
     // love/hate replacement policy. remember to flush if dirty
     // if return DONE, there is no availble frame
-    Status findReplaceFrame(int &Love_Hate, unsigned &MRU_LRU_index, unsigned &frameID);
+    Status findReplaceFrame(int &Love_Hate, unsigned &MRU_LRU_index, int &frameID);
     
    // fill in this area
 public:
+
+    //vector< vector<pair<PageId,unsigned> > > directory; // debug
+
     Page* bufPool; // The actual buffer pool       the index is fram number
 
     BufMgr (int numbuf, Replacer *replacer = 0); 
