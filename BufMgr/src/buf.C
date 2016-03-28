@@ -78,10 +78,10 @@ int BufMgr::SearchPage(PageId PID){
     int frameNUM = -1;
     unsigned index = hash(PID);
    // if(PID == 23) hashPrinting(index,directory,"before search");
-    cout<<"inside: "<< index <<" "<<directory.at(index).size()<<endl;
+    //cout<<"inside: "<< index <<" "<<directory.at(index).size()<<endl;
 
     for(unsigned i =0; i<directory.at(index).size(); i++){
-	cout<<i<<" dir["<<index<<"] size "<<directory.at(index).size()<<endl;
+	//cout<<i<<" dir["<<index<<"] size "<<directory.at(index).size()<<endl;
         if(directory.at(index).at(i).first==PID){
             return directory.at(index).at(i).second;
         }
@@ -114,11 +114,11 @@ Status BufMgr::HashAdd(PageId PID, unsigned frameNUM){
 }
 
 void hashPrinting(unsigned index,vector< vector<pair<PageId,unsigned> > > directory,char* loc){
-    for(int i =0; i<directory.at(index).size(); i++){
+    for(unsigned i =0; i<directory.at(index).size(); i++){
 cout<<directory.at(index).at(i).first<<' '<<directory.at(index).at(i).second<<endl;
 
         }
-cout<<loc<<" dir["<<index<<"] size"<<directory.at(index).size()<<endl;
+//cout<<loc<<" dir["<<index<<"] size"<<directory.at(index).size()<<endl;
     
 }
 //*************************************************************
@@ -134,15 +134,15 @@ Status BufMgr::HashDelete(PageId PID){
 
     for(i =0; i<directory.at(index).size(); i++){
         if(directory.at(index).at(i).first==PID){
-cout<<"bfeore delete: "<< directory.at(index).size()<<"dir index "<<index<<endl;
+//cout<<"bfeore delete: "<< directory.at(index).size()<<"dir index "<<index<<endl;
             directory.at(index).erase(directory.at(index).begin()+i);
-            cout<<"after delete: "<< directory.at(index).size()<<endl;
+           // cout<<"after delete: "<< directory.at(index).size()<<endl;
             break;
         }
     }
      //hashPrinting(index,directory,"after delete");
     if(i>directory.at(index).size()){ // if not exist
-	cout<<directory.at(index).size()<<' '<<PID<<' '<<index<<endl;
+	//cout<<directory.at(index).size()<<' '<<PID<<' '<<index<<endl;
         cout<<bufErrMsgs[2]<<endl;
         return DONE;
     }
@@ -174,7 +174,7 @@ Status BufMgr::pinPage(PageId PageId_in_a_DB, Page*& page, int emptyPage) {
 	Status status;
 	int frame = SearchPage(PageId_in_a_DB);
 	if( frame != -1){	
-		printf("already in\n");
+		//printf("already in\n");
 		bufDescr[frame].pin_count ++;
 		page = &bufPool[frame];
 	return OK;
@@ -189,11 +189,11 @@ Status BufMgr::pinPage(PageId PageId_in_a_DB, Page*& page, int emptyPage) {
 
 		if(bufDescr[frame].page_number != INVALID_PAGE){
 			//update directory
-    hashPrinting(2,directory,"before delete");
-    hashPrinting(3,directory,"before delete");
+    //hashPrinting(2,directory,"before delete");
+    //hashPrinting(3,directory,"before delete");
 			HashDelete(bufDescr[frame].page_number);
-    hashPrinting(2,directory,"after delete");
-    hashPrinting(3,directory,"after delete");
+    //hashPrinting(2,directory,"after delete");
+    //hashPrinting(3,directory,"after delete");
 		}
 		if(bufDescr[frame].dirtybit == 1){
 			//write back
@@ -201,10 +201,10 @@ Status BufMgr::pinPage(PageId PageId_in_a_DB, Page*& page, int emptyPage) {
 			if(status != OK)
 				return MINIBASE_CHAIN_ERROR(BUFMGR, status);
 		}
-hashPrinting(3,directory,"pinned");
+//hashPrinting(3,directory,"pinned");
 		//update directory
 		HashAdd(PageId_in_a_DB,frame);
-hashPrinting(3,directory,"hashadded");
+//hashPrinting(3,directory,"hashadded");
 		//pin the new page first before reading it in
 		bufDescr[frame].page_number = PageId_in_a_DB;
 		bufDescr[frame].pin_count = 1;
@@ -223,7 +223,7 @@ cout<<"error in db reading"<<endl;
 		}
 		//actual return page
 		page = &bufPool[frame];
-hashPrinting(3,directory,"pageassigned");
+//hashPrinting(3,directory,"pageassigned");
 	//update replacer policy
 	if(Love_Hate == 1)//mru
 		MRUlist.erase(MRUlist.begin() + MRU_LRU_index);
@@ -283,13 +283,13 @@ Status BufMgr::findReplaceFrame(int &Love_Hate, unsigned &MRU_LRU_index, int &fr
 Status BufMgr::unpinPage(PageId page_num, int dirty=FALSE, int hate = FALSE){
   // put your code here
 
-	printf("going inside\n");
+	//printf("going inside\n");
 	int frame = SearchPage(page_num);
 
 
 
 	if( frame != -1){	
-		printf("frame %d already in\n",frame);
+		//printf("frame %d already in\n",frame);
 		bufDescr[frame].pin_count --;
 		if(frame < 0 || frame >= (int)numBuffers)
                 	return MINIBASE_FIRST_ERROR(BUFMGR, BUFFERPAGENOTPINNED);
@@ -304,14 +304,14 @@ Status BufMgr::unpinPage(PageId page_num, int dirty=FALSE, int hate = FALSE){
 		if(hate == FALSE){//go to lrulist
 			    for(unsigned i =0; i<MRUlist.size(); i++){
 				unsigned mru_frame = MRUlist.at(i);
-				if(mru_frame == frame){  // love overcomes hate
+				if(mru_frame == (unsigned)frame){  // love overcomes hate
 					MRUlist.erase(MRUlist.begin() + i);
        				 }
   			    }
 			    for(unsigned i =0; i<LRUlist.size(); i++){
 				unsigned lru_frame = LRUlist.at(i);
-				if(lru_frame == frame){  // already loved
-					LRUlist.erase(MRUlist.begin() + i);
+				if(lru_frame == (unsigned)frame){  // already loved
+					LRUlist.erase(LRUlist.begin() + i);
        				 }
   			    }
 			    LRUlist.insert(LRUlist.begin(),frame);
@@ -319,19 +319,20 @@ Status BufMgr::unpinPage(PageId page_num, int dirty=FALSE, int hate = FALSE){
 		else {//go to mru list
 			    for(unsigned i =0; i<LRUlist.size(); i++){
 				unsigned lru_frame = LRUlist.at(i);
-				if(lru_frame == frame){  // already loved, do nothing
+				if(lru_frame == (unsigned)frame){  // already loved, do nothing
 					return OK;
        				 }
   			    }
 			    for(unsigned i =0; i<MRUlist.size(); i++){
 				unsigned mru_frame = MRUlist.at(i);
-				if(mru_frame == frame){  // already hated
+				if(mru_frame == (unsigned)frame){  // already hated
 					MRUlist.erase(MRUlist.begin() + i);
        				 }
   			    }
 			    MRUlist.push_back(frame);
 		}
 	}
+/*
 	for(unsigned i =0; i<LRUlist.size(); i++){
 	cout<<LRUlist.at(i)<<' ';
 	}
@@ -340,6 +341,7 @@ Status BufMgr::unpinPage(PageId page_num, int dirty=FALSE, int hate = FALSE){
 	cout<<MRUlist.at(i)<<' ';
 	}
 	cout<<endl;
+*/
   return OK;
 }
 
