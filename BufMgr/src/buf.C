@@ -27,7 +27,7 @@ static const char* bufErrMsgs[] = {
   "Unpinning an unpinned page",
   "Freeing a pinned page"
 };
-
+void hashPrinting(unsigned index,vector< vector<pair<PageId,unsigned> > > directory,char*);
 // Create a static "error_string_table" object and register the error messages
 // with minibase system 
 static error_string_table bufTable(BUFMGR,bufErrMsgs);
@@ -49,8 +49,8 @@ BufMgr::BufMgr (int numbuf, Replacer *replacer) {
 	//cout<<bufDescr.size()<<endl;
 	//bufDescr2.push_back(1);
         bufDescr.push_back(Pagedescr);
+	MRUlist.push_back(numbuf - i - 1);
     }
-    
     
     for(int j=0; j < HTSIZE; j++){
         vector<pair<PageId,unsigned> > temp(0);
@@ -77,17 +77,19 @@ int BufMgr::SearchPage(PageId PID){
     
     int frameNUM = -1;
     unsigned index = hash(PID);
-    cout<<index<<' '<<directory.capacity()<<endl;
-    
+   // if(PID == 23) hashPrinting(index,directory,"before search");
+    cout<<"inside: "<< index <<" "<<directory.at(index).size()<<endl;
+
     for(unsigned i =0; i<directory.at(index).size(); i++){
+	cout<<i<<" dir["<<index<<"] size "<<directory.at(index).size()<<endl;
         if(directory.at(index).at(i).first==PID){
             return directory.at(index).at(i).second;
         }
     }
-    
-    if(frameNUM==-1){
-        cout<<bufErrMsgs[3]<<endl;
-    }
+   
+//    if(frameNUM==-1){
+//        cout<<bufErrMsgs[3]<<" pid is"<<PID<<endl;
+//    }
     
     return frameNUM;
 }
@@ -105,11 +107,20 @@ Status BufMgr::HashAdd(PageId PID, unsigned frameNUM){
         cout<<bufErrMsgs[1]<<endl;
         return DONE;
     }
-    
+
     directory.at(index).push_back(make_pair(PID, frameNUM));
+   // if(PID == 23) hashPrinting(index,directory,"after adding");
     return status;
 }
 
+void hashPrinting(unsigned index,vector< vector<pair<PageId,unsigned> > > directory,char* loc){
+    for(int i =0; i<directory.at(index).size(); i++){
+cout<<directory.at(index).at(i).first<<' '<<directory.at(index).at(i).second<<endl;
+
+        }
+cout<<loc<<" dir["<<index<<"] size"<<directory.at(index).size()<<endl;
+    
+}
 //*************************************************************
 //** delete the index in hash table after delete a page
 //** return status
@@ -119,15 +130,19 @@ Status BufMgr::HashDelete(PageId PID){
     Status status = OK;
     unsigned index = hash(PID);
     unsigned i =0;
-    
+
+
     for(i =0; i<directory.at(index).size(); i++){
         if(directory.at(index).at(i).first==PID){
+cout<<"bfeore delete: "<< directory.at(index).size()<<"dir index "<<index<<endl;
             directory.at(index).erase(directory.at(index).begin()+i);
+            cout<<"after delete: "<< directory.at(index).size()<<endl;
             break;
         }
     }
-    
-    if(i>=directory.at(index).size()){ // if not exist
+     //hashPrinting(index,directory,"after delete");
+    if(i>directory.at(index).size()){ // if not exist
+	cout<<directory.at(index).size()<<' '<<PID<<' '<<index<<endl;
         cout<<bufErrMsgs[2]<<endl;
         return DONE;
     }
@@ -155,49 +170,72 @@ Status BufMgr::pinPage(PageId PageId_in_a_DB, Page*& page, int emptyPage) {
         // also write out the old page if it's dirty before reading
         // if emptyPage==TRUE, then actually no read is done to bring
         // the page
-printf("pinnnnnnnnnnn\n");
+//printf("pinnnnnnnnnnn\n");
 	Status status;
 	int frame = SearchPage(PageId_in_a_DB);
 	if( frame != -1){	
 		printf("already in\n");
 		bufDescr[frame].pin_count ++;
 		page = &bufPool[frame];
+	return OK;
 	}
 	else {
+		int Love_Hate;
+		unsigned MRU_LRU_index;
+		status = findReplaceFrame(Love_Hate, MRU_LRU_index, frame);
+		//printf("frame victim %d\n",frame);
+		if(status != OK)
+			return MINIBASE_FIRST_ERROR( BUFMGR, BUFFERFULL );
 
-//		if(victim == -1)
-//			return MINIBASE_FIRST_ERROR( BUFMGR, BUFFERFULL );
-//		if(bufDescr[victim].page_number != INVALID_PAGE){
-//			//update directory
-//			HashDelete(bufDescr[victim].page_number);
-//		}
-//		if(bufDescr[victim].dirtybit == 1){
-//			//write back
-//			status = MINIBASE_DB->write_page(bufDescr[victim].page_number, &bufPool[victim]);
-//			if(status != OK)
-//				return MINIBASE_CHAIN_ERROR(BUFMGR, status);
-//		}
-//		//update directory
-//		HashAdd(PageId_in_a_DB,victim);
-//		//pin the new page first before reading it in
-//		bufDescr[victim].page_number = PageId_in_a_DB;
-//		bufDescr[victim].pin_count = 1;
-//		bufDescr[victim].dirtybit = 0;
-//		if(emptyPage == 0){
-//			//read in something
-//			status = MINIBASE_DB->read_page(PageId_in_a_DB, &bufPool[victim]);	
-//			if(status != OK)
-//			{//undo if error occurs
-//				bufDescr[victim].page_number = INVALID_PAGE;
-//				bufDescr[victim].dirtybit = 0;
-//				bufDescr[victim].pin_count--;
-//				return MINIBASE_CHAIN_ERROR(BUFMGR, status);
-//			}
-		//}
+		if(bufDescr[frame].page_number != INVALID_PAGE){
+			//update directory
+    hashPrinting(2,directory,"before delete");
+    hashPrinting(3,directory,"before delete");
+			HashDelete(bufDescr[frame].page_number);
+    hashPrinting(2,directory,"after delete");
+    hashPrinting(3,directory,"after delete");
+		}
+		if(bufDescr[frame].dirtybit == 1){
+			//write back
+			status = MINIBASE_DB->write_page(bufDescr[frame].page_number, &bufPool[frame]);
+			if(status != OK)
+				return MINIBASE_CHAIN_ERROR(BUFMGR, status);
+		}
+hashPrinting(3,directory,"pinned");
+		//update directory
+		HashAdd(PageId_in_a_DB,frame);
+hashPrinting(3,directory,"hashadded");
+		//pin the new page first before reading it in
+		bufDescr[frame].page_number = PageId_in_a_DB;
+		bufDescr[frame].pin_count = 1;
+		bufDescr[frame].dirtybit = 0;
+		if(emptyPage == 0){
+			//read in something
+			status = MINIBASE_DB->read_page(PageId_in_a_DB, &bufPool[frame]);	
+			if(status != OK)
+			{//undo if error occurs
+cout<<"error in db reading"<<endl;
+				bufDescr[frame].page_number = INVALID_PAGE;
+				bufDescr[frame].dirtybit = 0;
+				bufDescr[frame].pin_count--;
+				return MINIBASE_CHAIN_ERROR(BUFMGR, status);
+			}
+		}
 		//actual return page
-		//page = &bufPool[victim];
-	}
+		page = &bufPool[frame];
+hashPrinting(3,directory,"pageassigned");
+	//update replacer policy
+	if(Love_Hate == 1)//mru
+		MRUlist.erase(MRUlist.begin() + MRU_LRU_index);
+	else if(Love_Hate ==0)//lru
+		LRUlist.erase(LRUlist.begin() + MRU_LRU_index);
+	//printf("pin page %d at frame %d\n",PageId_in_a_DB,frame);
+	//frame = SearchPage(PageId_in_a_DB);
+	//cout<<frame<<endl;
+	//hashPrinting(3,directory,"pinned");
   return OK;
+	}
+
 }//end pinPage
 
 //*************************************************************
@@ -207,7 +245,7 @@ printf("pinnnnnnnnnnn\n");
 //** return Love_Hate = 0: LRUlist, Love_Hate = 1: MRUlist
 //** return MRU_LRU_index, frameID
 //************************************************************
-Status BufMgr::findReplaceFrame(int &Love_Hate, unsigned &MRU_LRU_index, unsigned &frameID)
+Status BufMgr::findReplaceFrame(int &Love_Hate, unsigned &MRU_LRU_index, int &frameID)
 {
     
     // search hated pages firstly, MRUlist, FILO
@@ -244,6 +282,64 @@ Status BufMgr::findReplaceFrame(int &Love_Hate, unsigned &MRU_LRU_index, unsigne
 //************************************************************
 Status BufMgr::unpinPage(PageId page_num, int dirty=FALSE, int hate = FALSE){
   // put your code here
+
+	printf("going inside\n");
+	int frame = SearchPage(page_num);
+
+
+
+	if( frame != -1){	
+		printf("frame %d already in\n",frame);
+		bufDescr[frame].pin_count --;
+		if(frame < 0 || frame >= (int)numBuffers)
+                	return MINIBASE_FIRST_ERROR(BUFMGR, BUFFERPAGENOTPINNED);
+		if(bufDescr[frame].pin_count < 0 || bufDescr[frame].page_number == INVALID_PAGE)
+			return MINIBASE_FIRST_ERROR( BUFMGR, BUFFERPAGENOTPINNED);
+	}
+	else{
+		return MINIBASE_FIRST_ERROR( BUFMGR, HASHNOTFOUND);
+		}
+	if(bufDescr[frame].pin_count == 0){
+		bufDescr[frame].dirtybit = dirty;
+		if(hate == FALSE){//go to lrulist
+			    for(unsigned i =0; i<MRUlist.size(); i++){
+				unsigned mru_frame = MRUlist.at(i);
+				if(mru_frame == frame){  // love overcomes hate
+					MRUlist.erase(MRUlist.begin() + i);
+       				 }
+  			    }
+			    for(unsigned i =0; i<LRUlist.size(); i++){
+				unsigned lru_frame = LRUlist.at(i);
+				if(lru_frame == frame){  // already loved
+					LRUlist.erase(MRUlist.begin() + i);
+       				 }
+  			    }
+			    LRUlist.insert(LRUlist.begin(),frame);
+		}
+		else {//go to mru list
+			    for(unsigned i =0; i<LRUlist.size(); i++){
+				unsigned lru_frame = LRUlist.at(i);
+				if(lru_frame == frame){  // already loved, do nothing
+					return OK;
+       				 }
+  			    }
+			    for(unsigned i =0; i<MRUlist.size(); i++){
+				unsigned mru_frame = MRUlist.at(i);
+				if(mru_frame == frame){  // already hated
+					MRUlist.erase(MRUlist.begin() + i);
+       				 }
+  			    }
+			    MRUlist.push_back(frame);
+		}
+	}
+	for(unsigned i =0; i<LRUlist.size(); i++){
+	cout<<LRUlist.at(i)<<' ';
+	}
+	cout<<endl;
+	for(unsigned i =0; i<MRUlist.size(); i++){
+	cout<<MRUlist.at(i)<<' ';
+	}
+	cout<<endl;
   return OK;
 }
 
@@ -286,9 +382,9 @@ Status BufMgr::flushAllPages(){
 //************************************************************
 Status BufMgr::pinPage(PageId PageId_in_a_DB, Page*& page, int emptyPage, const char *filename){
   //put your code here
-printf("here i am1\n");
+
 pinPage(PageId_in_a_DB,page,emptyPage);
-printf("here i am2\n");
+
   return OK;
 }
 
