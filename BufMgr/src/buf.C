@@ -173,10 +173,12 @@ Status BufMgr::pinPage(PageId PageId_in_a_DB, Page*& page, int emptyPage) {
 //printf("pinnnnnnnnnnn\n");
 	Status status;
 	int frame = SearchPage(PageId_in_a_DB);
+	//printf("pin: frame %d, pageid %d\n",frame,PageId_in_a_DB);
 	if( frame != -1){	
-		//printf("already in\n");
+	//	printf("pin: already in frame %d, pageid %d\n",frame,PageId_in_a_DB);
 		bufDescr[frame].pin_count ++;
 		page = &bufPool[frame];
+		//printf("pin page %d at frame %d, ref count %d\n",PageId_in_a_DB,frame,bufDescr[frame].pin_count);
 	return OK;
 	}
 	else {
@@ -199,7 +201,9 @@ Status BufMgr::pinPage(PageId PageId_in_a_DB, Page*& page, int emptyPage) {
 			//write back
 			status = MINIBASE_DB->write_page(bufDescr[frame].page_number, &bufPool[frame]);
 			if(status != OK)
+				{//cout<<"bad pin"<<endl;
 				return MINIBASE_CHAIN_ERROR(BUFMGR, status);
+				}
 		}
 //hashPrinting(3,directory,"pinned");
 		//update directory
@@ -214,7 +218,7 @@ Status BufMgr::pinPage(PageId PageId_in_a_DB, Page*& page, int emptyPage) {
 			status = MINIBASE_DB->read_page(PageId_in_a_DB, &bufPool[frame]);	
 			if(status != OK)
 			{//undo if error occurs
-cout<<"error in db reading"<<endl;
+//cout<<"error in db reading"<<endl;
 				bufDescr[frame].page_number = INVALID_PAGE;
 				bufDescr[frame].dirtybit = 0;
 				bufDescr[frame].pin_count--;
@@ -289,12 +293,16 @@ Status BufMgr::unpinPage(PageId page_num, int dirty=FALSE, int hate = FALSE){
 
 
 	if( frame != -1){	
-		//printf("frame %d already in\n",frame);
-		bufDescr[frame].pin_count --;
+		//printf("unpining frame %d already in, pageid is %d, ref count was %d\n",frame,page_num,bufDescr[frame].pin_count);
+
 		if(frame < 0 || frame >= (int)numBuffers)
                 	return MINIBASE_FIRST_ERROR(BUFMGR, BUFFERPAGENOTPINNED);
+		bufDescr[frame].pin_count --;
 		if(bufDescr[frame].pin_count < 0 || bufDescr[frame].page_number == INVALID_PAGE)
+			{bufDescr[frame].pin_count = 0;
 			return MINIBASE_FIRST_ERROR( BUFMGR, BUFFERPAGENOTPINNED);
+			}
+
 	}
 	else{
 		return MINIBASE_FIRST_ERROR( BUFMGR, HASHNOTFOUND);
@@ -356,10 +364,15 @@ Status BufMgr::unpinPage(PageId page_num, int dirty=FALSE, int hate = FALSE){
 Status BufMgr::newPage(PageId& firstPageId, Page*& firstpage, int howmany ) {
   // put your code here
 	Status status;
+	//cout<<"enter new"<<endl;
+	if(0 == getNumUnpinnedBuffers())
+		return MINIBASE_FIRST_ERROR(BUFMGR, INTERNALERROR);
 	status = MINIBASE_DB->allocate_page(firstPageId, howmany);
 	if(status != OK)
 		return MINIBASE_FIRST_ERROR(BUFMGR, INTERNALERROR);
+	//cout<<"new: first page "<<firstPageId<<" amount "<<howmany<<endl;
 	status = pinPage(firstPageId, firstpage, TRUE);
+
 	if(status != OK){
 		MINIBASE_DB->deallocate_page(firstPageId, howmany);
 		return MINIBASE_FIRST_ERROR(BUFMGR, INTERNALERROR);
@@ -381,8 +394,9 @@ Status BufMgr::freePage(PageId globalPageId){
 		//printf("frame %d already in\n",frame);
 		if(frame < 0 || frame >= (int)numBuffers)
                 	return MINIBASE_FIRST_ERROR(BUFMGR, BUFFERPAGENOTPINNED);
-		if(bufDescr[frame].pin_count > 0 || bufDescr[frame].page_number == INVALID_PAGE)
+		if(bufDescr[frame].pin_count != 0 || bufDescr[frame].page_number == INVALID_PAGE)
 			return DONE;
+		//cout<<bufDescr[frame].pin_count<<endl;
 		MINIBASE_DB->deallocate_page(globalPageId);
 			return OK;
 	}
@@ -403,13 +417,14 @@ Status BufMgr::flushPage(PageId pageid) {
         if(frame < 0 || frame >= (int)numBuffers)
             return MINIBASE_FIRST_ERROR(BUFMGR, BUFFERPAGENOTPINNED);
         
-        if(bufDescr[frame].pin_count > 0 || bufDescr[frame].page_number == INVALID_PAGE)
+        if(bufDescr[frame].page_number == INVALID_PAGE)
             return DONE;
         
         if (bufDescr[frame].dirtybit==true){
             status = MINIBASE_DB->write_page(bufDescr[frame].page_number, &bufPool[frame]);
             if(status != OK)
                 return MINIBASE_CHAIN_ERROR(BUFMGR, status);
+	    bufDescr[frame].dirtybit = false;
         }
     }
     
