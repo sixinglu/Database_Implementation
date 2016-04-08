@@ -23,7 +23,7 @@
 class SortedPage : public HFPage {
  private:
    // No private variables should be declared.
-
+void  slotPrint();
  public:
 
 /*

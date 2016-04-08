@@ -29,7 +29,7 @@ int keyCompare(const void *key1, const void *key2, AttrType t)
   
     // AttrType only be  attrString or attrInteger
     if(t==attrString){
-        return strcmp( ((Keytype*)key1)->charkey,((Keytype*)key2)->charkey );
+        return strncmp( ((Keytype*)key1)->charkey,((Keytype*)key2)->charkey,MAX_KEY_SIZE1 );
     }
     else if(t==attrInteger){
         return ((Keytype*)key1)->intkey - ((Keytype*)key2)->intkey;

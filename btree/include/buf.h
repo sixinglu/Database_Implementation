@@ -9,6 +9,9 @@
 #include "db.h"
 #include "page.h"
 #include "new_error.h"
+#include <vector>
+#include <queue>
+#include <math.h>
 
 #define NUMBUF 20   
 // Default number of frames, artifically small number for ease of debugging.
@@ -16,7 +19,11 @@
 #define HTSIZE 7
 // Hash Table size
 
+#define HASH_a 1
+#define HASH_b 1
 
+
+using namespace std;
 
 /*******************ALL BELOW are purely local to buffer Manager********/
 
@@ -24,15 +31,78 @@
 enum bufErrCodes  {HASHMEMORY, HASHDUPLICATEINSERT, HASHREMOVEERROR, HASHNOTFOUND, QMEMORYERROR, QEMPTY, INTERNALERROR, 
 			BUFFERFULL, BUFMGRMEMORYERROR, BUFFERPAGENOTFOUND, BUFFERPAGENOTPINNED, BUFFERPAGEPINNED};
 
-class Replacer; // may not be necessary as described below in the constructor
+class descriptors{
+public:
+    PageId page_number;
+    int pin_count;
+    bool dirtybit;  // true is dirty
+};
+
+//
+class Replacer;
+//{
+//
+//  public:
+//    virtual int pin( int frameNo );
+//    virtual int unpin( int frameNo );
+//    virtual int free( int frameNo );
+//    virtual int pick_victim() = 0;     // Must pin the returned frame.
+//    virtual const char *name() = 0;
+//    virtual void info();
+//
+//    unsigned getNumUnpinnedBuffers();
+//
+//  protected:
+//    Replacer();
+//    virtual ~Replacer();
+//
+//    enum STATE {Available, Referenced, Pinned};
+//
+//    BufMgr *mgr;
+//    friend class BufMgr;
+//    virtual void setBufferManager( BufMgr *mgr );
+//
+//}; // may not be necessary as described below in the constructor
 
 class BufMgr {
 
 private: 
    unsigned int    numBuffers;
+   // the followings private numbers are defined according to requirement on 2016-03-10
+    
+   vector<descriptors> bufDescr;  // each one in bufDescr maps to each element in bufPool
+    
+   // vector of <page number, frame number>
+   vector< vector<pair<PageId,unsigned> > > directory;  // the hash table, the reason I do not use array and linked list is vector is easy to add and remove elments (no need to release also), plus I love pair
+   
+   // LRU list of <frame number>, peek top, pop using queue. remove the according one in MRU by earse
+   vector< unsigned > LRUlist;  // loved pages
+    
+   // MRU list of <frame number>, peek top, pop using vector. remove the according one in LRU by earse
+   vector< unsigned > MRUlist;  // hated pages
+    
+    // return hash index in directroy
+    unsigned hash(PageId PID);
+    
+    // return frame number
+    int SearchPage(PageId PID);
+    
+    // add a page into directory
+    Status HashAdd(PageId PID, unsigned frameNUM);
+    
+    // delete a page in the directory
+    Status HashDelete(PageId PID);
+    
+    // love/hate replacement policy. remember to flush if dirty
+    // if return DONE, there is no availble frame
+    Status findReplaceFrame(int &Love_Hate, unsigned &MRU_LRU_index, int &frameID);
+    
    // fill in this area
 public:
-    Page* bufPool; // The actual buffer pool
+
+    //vector< vector<pair<PageId,unsigned> > > directory; // debug
+
+    Page* bufPool; // The actual buffer pool       the index is fram number
 
     BufMgr (int numbuf, Replacer *replacer = 0); 
    	// Initializes a buffer manager managing "numbuf" buffers.
