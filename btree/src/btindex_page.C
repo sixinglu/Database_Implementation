@@ -6,6 +6,7 @@
  */
 
 #include "btindex_page.h"
+#include "buf.h"
 
 // Define your Error Messge here
 const char* BTIndexErrorMsgs[] = {
@@ -35,8 +36,51 @@ Status BTIndexPage::get_page_no(const void *key,
                                 AttrType key_type,
                                 PageId & pageNo)
 {
-  // put your code here
-  return OK;
+    Status status = OK;
+    
+    // if this page is deleted
+    if(this->empty()==true){
+        return OK;
+    }
+    
+    // read the key inside index record one by one
+    RID currRID, prevRID;
+    status = this->firstRecord(currRID);               // read the first index RID
+    do{
+        char *recPtr;
+        int recLen;
+        
+        status = this->getRecord(currRID,recPtr,recLen);   // read the first index record
+        
+        // read the key from entry
+        void *targetkey;  // the key in the tree
+        Datatype *targetdata;
+        get_key_data(targetkey, targetdata, (KeyDataEntry *)recPtr, recLen, INDEX); // must be index
+        
+        
+        // if the target key is deleted
+        // ...
+        
+        // compare the key
+        int compareResult = keyCompare(key,targetkey,key_type);
+        if(compareResult==0){  // the key already there
+            return DONE;
+        }
+        else if(compareResult<0){  // the insert key is smaller
+            
+            // this record point to the page is the next level search page
+            pageNo = targetdata->pageNo;
+            return OK;
+            
+        }
+        // else the insert key is larger, move on to next key record
+        
+        prevRID = currRID;
+        
+    }
+    while(this->nextRecord(prevRID,currRID)==OK);
+    
+    return status;
 }
 
     
