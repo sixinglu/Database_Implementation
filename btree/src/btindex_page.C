@@ -23,53 +23,12 @@ Status BTIndexPage::insertKey (const void *key,
                                RID& rid)
 {
   // put your code here
-KeyDataEntry tmpEntry;
-int entry_len;
-Datatype dtype;
-dtype.pageNo = pageNo;
-nodetype ndtype = INDEX;
-make_entry(&tmpEntry,key_type,key,ndtype,dtype,
-                &entry_len);
-
-insertRecord (key_type, (char *)&tmpEntry, entry_len,rid);
   return OK;
 }
 
 Status BTIndexPage::deleteKey (const void *key, AttrType key_type, RID& curRid)
 {
   // put your code here
-Status status;
-  RID currRID, prevRID;
-    status = this->firstRecord(currRID);               // read the first index RID
-    do{
-        KeyDataEntry recPtr;
-        int recLen;
-        
-        status = this->getRecord(currRID,(char*)&recPtr,recLen);   // read the next index record
-        
-        // read the key from entry
-        void *targetkey;  // the key in the tree
-        Datatype *targetdata;
-        get_key_data(targetkey, targetdata, &recPtr, recLen, INDEX); // must be index
-        
-        
-        // compare the key
-        int compareResult = keyCompare(key,targetkey,key_type);
-        if(compareResult==0){  // the key already there, so delete it 
-		deleteRecord (currRID);
-            return OK;
-        }
-        else if(compareResult<0){  // the insert key is smaller
-				// don't want to delete it
-            return DONE;
-        }
-        // else the insert key is larger, move on to next key record
-        
-        prevRID = currRID;
-        
-    }
-    while(this->nextRecord(prevRID,currRID)==OK);
-
   return OK;
 }
 
@@ -88,15 +47,15 @@ Status BTIndexPage::get_page_no(const void *key,
     RID currRID, prevRID;
     status = this->firstRecord(currRID);               // read the first index RID
     do{
-        KeyDataEntry recPtr;
+        char *recPtr;
         int recLen;
         
-        status = this->getRecord(currRID,(char*)&recPtr,recLen);   // read the next index record
+        status = this->getRecord(currRID,recPtr,recLen);   // read the first index record
         
         // read the key from entry
         void *targetkey;  // the key in the tree
         Datatype *targetdata;
-        get_key_data(targetkey, targetdata, &recPtr, recLen, INDEX); // must be index
+        get_key_data(targetkey, targetdata, (KeyDataEntry *)recPtr, recLen, INDEX); // must be index
         
         
         // if the target key is deleted
@@ -124,7 +83,7 @@ Status BTIndexPage::get_page_no(const void *key,
     return status;
 }
 
-
+    
 Status BTIndexPage::get_first(RID& rid,
                               void *key,
                               PageId & pageNo)
