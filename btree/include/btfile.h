@@ -17,9 +17,20 @@
 // Define your error code for B+ tree here
 // enum btErrCodes  {...}
 
+// header page do not contain key or RID informaion, only used for grad the first index or leaf
+class HeaderPage{
+public:
+    //PageId headerpageID;
+    PageId rootPageID;      // compare the rootPageId to tell if the page is root
+    AttrType keytype;
+    nodetype PageType;
+    int keysize;
+};
+
 class BTreeFile: public IndexFile
 {
   public:
+    
     BTreeFile(Status& status, const char *filename);
     // an index with given filename should already exist,
     // this opens it.
@@ -58,7 +69,27 @@ class BTreeFile: public IndexFile
     int keysize();
     
   private:
-
+    
+    HeaderPage headerpage;
+    
+    // recursively search, return leaf PageID
+    // called in Insert_helper()
+    Status Search_index(PageId& result, PageId currPage, const void *key);
+    
+    // recursively search the parent of the split target, child could be index/leaf
+    // called in Insert_helper()
+    Status Search_parent(const PageId child, PageId currPage, const void *childkey, PageId& parent);
+    
+    // almost the same with get_page_no, but we also need to know parent RID when search child
+    // not needed anymore, move former part into new node, need no update
+    //Status get_parent_child(SortedPage* currPage, const void *key, AttrType key_type, PageId & pageNo, RID &parentRid);
+    
+    // split the page into two page, copyup (leaf), pushup(index) key
+    Status Split(PageId splitTarget, PageId &rightchild, void *upkey);
+    
+    // may recursively insert, split, search_index
+    Status Insert_helper(PageId insertLoc, const void *key, Datatype datatype, nodetype createdtype);
+    
 };
 
 #endif
