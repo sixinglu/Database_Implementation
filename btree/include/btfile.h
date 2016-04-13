@@ -14,6 +14,8 @@
 #include "btreefilescan.h"
 #include "bt.h"
 
+#define ADVANCED_DELTE 1
+
 // Define your error code for B+ tree here
 // enum btErrCodes  {...}
 
@@ -93,6 +95,19 @@ class BTreeFile: public IndexFile
     /******* Delete *****/
     Status Search_index(PageId& indexPage, PageId& leafPage, PageId currPage, const void *key );
     bool get_matchedkey_page(SortedPage* currIndex, const void *key, PageId & recordpageId, PageId& child);
+    
+    // delete helper to recursively call, for the merge
+    Status Delete_helper(PageId currentDel, const void *key, const RID rid);
+    //Status Delete_1record(SortedPage* deleteTarget, nodetype ndtype, const RID rid);  // sub funtion for code reusage
+    
+    // sibling redistribution
+    bool find_sibling(SortedPage* currIndex, const void *key, PageId &LeftSiblingPage, PageId &RightSiblingPage, RID* parentRID, RID*rightParent, BTIndexPage* parentNode);
+    Status leftDistribute(SortedPage* current, SortedPage* left, BTIndexPage* parent);
+    Status rightDistibute(SortedPage* current, SortedPage* right, BTIndexPage* parent);
+    
+    // merging algorithm
+    Status leftMerge(SortedPage* current, SortedPage* left, BTIndexPage* parent, RID* parentRID);
+    Status rightMerge(SortedPage* current, SortedPage* right, BTIndexPage* parent, RID* parentRID, RID* rightParent);
     
     
     /******** Destory file *********/
