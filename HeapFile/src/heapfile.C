@@ -5,6 +5,7 @@
 
 
 #include "heapfile.h"
+#include "buf.h"
 #include <memory.h>
 
 // ******************************************************

@@ -140,7 +140,7 @@ Status TestDriver::runTests()
     newlogpath = new char[ strlen(logpath) + 20];
     strcpy(newdbpath,dbpath); 
     strcpy(newlogpath, logpath);
-
+//printf("dead or a \n");
 #ifdef MULTIUSER
 	pwd = getpwuid(getuid());
 	sprintf(remove_dbcmd, "/bin/rm -rf %s-%s", dbpath, pwd->pw_name);
@@ -196,7 +196,7 @@ Status TestDriver::runAllTests()
     runTest( answer, &TestDriver::test2 );
     runTest( answer, &TestDriver::test3 );
     runTest( answer, &TestDriver::test4 );
-    runTest( answer, &TestDriver::test5 );
+runTest( answer, &TestDriver::test5 );
     runTest( answer, &TestDriver::test6 );
     return answer;
 }

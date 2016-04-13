@@ -484,6 +484,7 @@ int BMTester::test6()
         }
 
         minibase_errors.clear_errors();
+	printf("res 6 %d\n", st == OK);
 	return st == OK;
 }
 

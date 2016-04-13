@@ -163,7 +163,7 @@ BufMgr::~BufMgr(){
 //*************************************************************
 //** This is the implementation of pinPage
 //************************************************************
-Status BufMgr::pinPage(PageId PageId_in_a_DB, Page*& page, int emptyPage = 0) {
+Status BufMgr::pinPage1(PageId PageId_in_a_DB, Page*& page, int emptyPage) {
   // put your code here
         // Check if this page is in buffer pool, otherwise
         // find a frame for this page, read in and pin it.
@@ -284,7 +284,7 @@ Status BufMgr::findReplaceFrame(int &Love_Hate, unsigned &MRU_LRU_index, int &fr
 //*************************************************************
 //** This is the implementation of unpinPage
 //************************************************************
-Status BufMgr::unpinPage(PageId page_num, int dirty=0, int hate = 0){
+Status BufMgr::unpinPageAAA(PageId page_num, int dirty, int hate){
   // put your code here
 
 	//printf("going inside\n");
@@ -371,7 +371,7 @@ Status BufMgr::newPage(PageId& firstPageId, Page*& firstpage, int howmany ) {
 	if(status != OK)
 		return MINIBASE_FIRST_ERROR(BUFMGR, INTERNALERROR);
 	//cout<<"new: first page "<<firstPageId<<" amount "<<howmany<<endl;
-	status = pinPage(firstPageId, firstpage, TRUE);
+	status = pinPage1(firstPageId, firstpage, TRUE);
 
 	if(status != OK){
 		MINIBASE_DB->deallocate_page(firstPageId, howmany);
@@ -461,7 +461,7 @@ Status BufMgr::flushAllPages(){
 Status BufMgr::pinPage(PageId PageId_in_a_DB, Page*& page, int emptyPage, const char *filename){
   //put your code here
 
-    pinPage(PageId_in_a_DB,page,emptyPage);
+    pinPage1(PageId_in_a_DB,page,emptyPage);
 
   return OK;
 }
@@ -469,9 +469,10 @@ Status BufMgr::pinPage(PageId PageId_in_a_DB, Page*& page, int emptyPage, const 
 //*************************************************************
 //** This is the implementation of unpinPage
 //************************************************************
-Status unpinPage(PageId globalPageId_in_a_DB, int dirty, const char *filename){
+Status BufMgr::unpinPage(int globalPageId_in_a_DB, int dirty, const char *filename){
   
-    unpinPage(globalPageId_in_a_DB, dirty, 0);
+    unpinPageAAA(globalPageId_in_a_DB,dirty,0);
+	//pinPage1(PageId_in_a_DB,page,emptyPage);
     return OK;
 }
 

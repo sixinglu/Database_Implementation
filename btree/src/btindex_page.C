@@ -70,7 +70,7 @@ Status BTIndexPage::deleteKey (const void *key, AttrType key_type, RID& curRid)
     }
     while(this->nextRecord(prevRID,currRID)==OK);
     
-    return OK;
+    return status;
 }
 
 Status BTIndexPage::get_page_no(const void *key,
@@ -126,11 +126,41 @@ Status BTIndexPage::get_first(RID& rid,
                               PageId & pageNo)
 {
     // put your code here
-    return OK;
+Status status;
+    RID currRID;
+    status = this->firstRecord(currRID);   
+if(status != OK){
+	printf("no record on first record\n");
+	return DONE;
+}
+KeyDataEntry recPtr;
+        int recLen;
+        
+        status = this->getRecord(currRID,(char*)&recPtr,recLen);   // read the next index record
+Datatype tmpID;
+get_key_data(key, &tmpID,&recPtr, recLen, INDEX);
+pageNo = tmpID.pageNo;
+rid = currRID;
+  return status;
 }
 
 Status BTIndexPage::get_next(RID& rid, void *key, PageId & pageNo)
 {
     // put your code here
+Status status;
+KeyDataEntry recPtr;
+        int recLen;
+        status = this->getRecord(rid,(char*)&recPtr,recLen);
+RID nextRid;
+	status = this->nextRecord(rid, nextRid);
+if(status != OK){
+	printf("no record on next record\n");
+	return DONE;
+}
+        status = this->getRecord(nextRid,(char*)&recPtr,recLen);
+rid = nextRid;
+Datatype tmpID;
+get_key_data(key, &tmpID,&recPtr, recLen, INDEX);
+pageNo = tmpID.pageNo;
     return OK;
 }

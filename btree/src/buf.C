@@ -458,7 +458,7 @@ Status BufMgr::flushAllPages(){
 //*************************************************************
 //** This is the implementation of pinPage
 //************************************************************
-/*Status BufMgr::pinPage(PageId PageId_in_a_DB, Page*& page, int emptyPage, const char *filename){
+Status BufMgr::pinPage(PageId PageId_in_a_DB, Page*& page, int emptyPage, const char *filename){
   //put your code here
 
     pinPage(PageId_in_a_DB,page,emptyPage);
@@ -473,7 +473,7 @@ Status unpinPage(PageId globalPageId_in_a_DB, int dirty, const char *filename){
   
     unpinPage(globalPageId_in_a_DB, dirty, 0);
     return OK;
-}*/
+}
 
 //*************************************************************
 //** This is the implementation of getNumUnpinnedBuffers
