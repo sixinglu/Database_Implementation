@@ -25,6 +25,7 @@ public:
     AttrType keytype;
     nodetype PageType;
     int keysize;
+    char *filename;
 };
 
 class BTreeFile: public IndexFile
@@ -72,23 +73,30 @@ class BTreeFile: public IndexFile
     
     HeaderPage headerpage;
     
+    /******* Insert *****/
+    
     // recursively search, return leaf PageID
     // called in Insert_helper()
-    Status Search_index(PageId& result, PageId currPage, const void *key);
+    Status Search_record(PageId& result, PageId currPage, const void *key);
     
     // recursively search the parent of the split target, child could be index/leaf
     // called in Insert_helper()
     Status Search_parent(const PageId child, PageId currPage, const void *childkey, PageId& parent);
-    
-    // almost the same with get_page_no, but we also need to know parent RID when search child
-    // not needed anymore, move former part into new node, need no update
-    //Status get_parent_child(SortedPage* currPage, const void *key, AttrType key_type, PageId & pageNo, RID &parentRid);
     
     // split the page into two page, copyup (leaf), pushup(index) key
     Status Split(PageId splitTarget, PageId &rightchild, void *upkey);
     
     // may recursively insert, split, search_index
     Status Insert_helper(PageId insertLoc, const void *key, Datatype datatype, nodetype createdtype);
+    
+    
+    /******* Delete *****/
+    Status Search_index(PageId& indexPage, PageId& leafPage, PageId currPage, const void *key );
+    bool get_matchedkey_page(SortedPage* currIndex, const void *key, PageId & recordpageId, PageId& child);
+    
+    
+    /******** Destory file *********/
+    Status destroyFile_Helper(PageId currPageId);
     
 };
 
