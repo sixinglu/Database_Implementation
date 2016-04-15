@@ -185,13 +185,13 @@ printf("insertRec zero failed\n");
     // search the insert location
     PageId result= INVALID_PAGE;
 printf("headerpage.rootPageID %d\n",headerpage.rootPageID);
-    status = Search_record(result, headerpage.rootPageID, key); // from root always
+    status = Search_record(result, headerpage.rootPageID, *(Keytype*)key); // from root always
 
     // call helper function
     Datatype datatype;
     datatype.rid = rid;
 printf("invalid page %d, result %d\n",INVALID_PAGE,result);
-    Insert_helper(result, key, datatype, LEAF);
+    Insert_helper(result, *(Keytype*)key, datatype, LEAF);
 //printf("insert %d times\n",insert_count);    
     return OK;
 }
@@ -202,7 +202,7 @@ Status BTreeFile::Delete(const void *key, const RID rid)
     PageId indexPage=INVALID_PAGE;
     PageId leafPage=INVALID_PAGE;
     
-    Search_index(indexPage, leafPage, headerpage.rootPageID, key );  // find the delete target
+    Search_index(indexPage, leafPage, headerpage.rootPageID, *(Keytype*)key );  // find the delete target
     
     if(ADVANCED_DELTE==0 || indexPage==headerpage.rootPageID || leafPage==headerpage.rootPageID){  // if it is the root, just simply delete, not pull down
     
@@ -241,7 +241,7 @@ Status BTreeFile::Delete(const void *key, const RID rid)
     }
     /**************** advanced delete with redistribution or merging ******************/
     else{
-        Delete_helper(leafPage, key, rid);
+        Delete_helper(leafPage, *(Keytype*)key, rid);
     }
     
     return OK;
@@ -249,7 +249,7 @@ Status BTreeFile::Delete(const void *key, const RID rid)
 
 // for advanced delete only
 // recursively call for merge
- Status BTreeFile::Delete_helper(PageId currentDel, const void *key, const RID rid)
+ Status BTreeFile::Delete_helper(PageId currentDel, Keytype &key, const RID rid)
 {
     Status status = OK;
     
@@ -264,11 +264,11 @@ Status BTreeFile::Delete(const void *key, const RID rid)
     
     if(ndtype==INDEX){
         datatype.pageNo = currentDel;  // only estimate the size
-        make_entry(&recodOne,headerpage.keytype,key,ndtype, datatype, &entryLen); //only use to get the lenth
+        make_entry(&recodOne,headerpage.keytype,(void*)&key,ndtype, datatype, &entryLen); //only use to get the lenth
     }
     else{
         datatype.rid = rid;
-        make_entry(&recodOne,headerpage.keytype,key,ndtype, datatype, &entryLen); //only use to get the lenth
+        make_entry(&recodOne,headerpage.keytype,(void*)&key,ndtype, datatype, &entryLen); //only use to get the lenth
     }
     
     /****** check if we can directly delete, namely has at least d+1 entries before delete ******/
@@ -359,7 +359,7 @@ Status BTreeFile::Delete(const void *key, const RID rid)
 }
 
 // find the left and right sibling
-bool BTreeFile::find_sibling(SortedPage* currIndex, const void *key, PageId &LeftSiblingPage, PageId &RightSiblingPage, RID* parentRID, RID*rightParent, BTIndexPage* parentNode)
+bool BTreeFile::find_sibling(SortedPage* currIndex, Keytype &key, PageId &LeftSiblingPage, PageId &RightSiblingPage, RID* parentRID, RID*rightParent, BTIndexPage* parentNode)
 {
     Status status = OK;
     
@@ -520,12 +520,12 @@ Status BTreeFile::leftMerge(SortedPage* current, SortedPage* left, BTIndexPage* 
     }
     else{ // recursively call delete_helper the parent index to delete current
         // read the key from parent node
-        char *ParrecPtr;
+        KeyDataEntry ParrecPtr;
         int ParrecLen;
-        status = parent->getRecord(*parentRID,ParrecPtr,ParrecLen);
-        void *parekey;
-        Datatype *paredata;
-        get_key_data(parekey, paredata, (KeyDataEntry *)ParrecPtr, ParrecLen, INDEX);  // only used to get key
+        status = parent->getRecord(*parentRID,(char*)&ParrecPtr,ParrecLen);
+        Keytype parekey;
+        Datatype paredata;
+        get_key_data(&parekey, &paredata, &ParrecPtr, ParrecLen, INDEX);  // only used to get key
         Delete_helper(parent->page_no(), parekey, *parentRID);
     }
 
@@ -550,13 +550,13 @@ Status BTreeFile::rightMerge(SortedPage* current, SortedPage* right, BTIndexPage
             status = right->deleteRecord(prevRID);
         }
         
-        char *recPtr;
+        KeyDataEntry recPtr;
         int recLen;
-        status = right->getRecord(currRID,recPtr,recLen);
+        status = right->getRecord(currRID,(char*)&recPtr,recLen);
         
         // insert into current
         RID tempRid;
-        current->insertRecord(headerpage.keytype, recPtr, recLen, tempRid);
+        current->insertRecord(headerpage.keytype, (char*)&recPtr, recLen, tempRid);
         
         prevRID = currRID;
     }
@@ -595,9 +595,9 @@ Status BTreeFile::rightMerge(SortedPage* current, SortedPage* right, BTIndexPage
         char *ParrecPtr;
         int ParrecLen;
         status = parent->getRecord(*rightParent,ParrecPtr,ParrecLen);
-        void *rigkey;
-        Datatype *rigdata;
-        get_key_data(rigkey, rigdata, (KeyDataEntry *)ParrecPtr, ParrecLen, INDEX);  // only used to get key
+        Keytype rigkey;
+        Datatype rigdata;
+        get_key_data(&rigkey, &rigdata, (KeyDataEntry *)ParrecPtr, ParrecLen, INDEX);  // only used to get key
         Delete_helper(parent->page_no(), rigkey, *rightParent);
     }
     
@@ -617,7 +617,7 @@ int BTreeFile::keysize()
 
 // recursively find the exact key Page and record page
 // called in delete
-Status BTreeFile::Search_index(PageId& indexPage, PageId& leafPage, PageId currPage, const void *key )
+Status BTreeFile::Search_index(PageId& indexPage, PageId& leafPage, PageId currPage, Keytype &key )
 {
     Status status = OK;
     if(currPage==INVALID_PAGE){
@@ -656,7 +656,7 @@ Status BTreeFile::Search_index(PageId& indexPage, PageId& leafPage, PageId currP
 
 // find the PageId with a specific key in a Page
 // return the recordPageNo
-bool BTreeFile::get_matchedkey_page(SortedPage* currIndex, const void *key, PageId & recordpageId, PageId& child)
+bool BTreeFile::get_matchedkey_page(SortedPage* currIndex, Keytype &key, PageId & recordpageId, PageId& child)
 {
     Status status = OK;
     
@@ -669,25 +669,25 @@ bool BTreeFile::get_matchedkey_page(SortedPage* currIndex, const void *key, Page
     RID currRID, prevRID;
     status = currIndex->firstRecord(currRID);               // read the first index RID
     do{
-        char *recPtr;
+        KeyDataEntry recPtr;
         int recLen;
         
-        status = currIndex->getRecord(currRID,recPtr,recLen);   // read the first index record
+        status = currIndex->getRecord(currRID,(char*)&recPtr,recLen);   // read the first index record
         
         // read the key from entry
-        void *targetkey;  // the key in the tree
-        Datatype *targetdata;
-        get_key_data(targetkey, targetdata, (KeyDataEntry *)recPtr, recLen, INDEX); // must be index
+        Keytype targetkey;  // the key in the tree
+        Datatype targetdata;
+        get_key_data(&targetkey, &targetdata, &recPtr, recLen, INDEX); // must be index
         
         
         // compare the key
-        int compareResult = keyCompare(key,targetkey,headerpage.keytype);
+        int compareResult = keyCompare((void*)&key,(void*)&targetkey,headerpage.keytype);
         if(compareResult==0){  // the key found
-            recordpageId = targetdata->pageNo;
+            recordpageId = targetdata.pageNo;
             return true;
         }
         else if(compareResult<0){
-            child = targetdata->pageNo;
+            child = targetdata.pageNo;
             return false;
         }
         // else the insert key is larger, move on to next key record
@@ -705,7 +705,7 @@ bool BTreeFile::get_matchedkey_page(SortedPage* currIndex, const void *key, Page
 // called in insert()
 // return LEAF
 // Status BTreeFile::Search_index(pair<PageId&, PageId&> result, PageId parentPage, PageId currPage, const void *key, bool &reduflag)
-Status BTreeFile::Search_record( PageId& result, PageId currPage, const void *key )
+Status BTreeFile::Search_record( PageId& result, PageId currPage, Keytype &key )
 {
     Status status = OK;
     
@@ -724,7 +724,7 @@ Status BTreeFile::Search_record( PageId& result, PageId currPage, const void *ke
     
     if(ndtype==INDEX){  // search this page, find the next child to search
         PageId child = INVALID_PAGE;
-        status = ((BTIndexPage*)currIndex)->get_page_no(key,headerpage.keytype,child);
+        status = ((BTIndexPage*)currIndex)->get_page_no((void*)&key,headerpage.keytype,child);
         status = MINIBASE_BM->unpinPage(currPage, 0, 1);
         if(child!=INVALID_PAGE || status == OK){ // find the child
             Search_record(result, child, key );
@@ -744,7 +744,7 @@ Status BTreeFile::Search_record( PageId& result, PageId currPage, const void *ke
 
 // recursively search the parent of the split target, child could be index/leaf
 // called in Insert_helper()
-Status BTreeFile::Search_parent(const PageId targetchild, PageId currPage, const void *childkey, PageId& parent)
+Status BTreeFile::Search_parent(const PageId targetchild, PageId currPage, Keytype &childkey, PageId& parent)
 {
     Status status = OK;
     
@@ -764,7 +764,7 @@ Status BTreeFile::Search_parent(const PageId targetchild, PageId currPage, const
     if(ndtype==INDEX){  // search this page, find the next child to search
         PageId child = INVALID_PAGE;
         RID pRID;
-        status = ((BTIndexPage*)currIndex)->get_page_no(childkey, headerpage.keytype, child);
+        status = ((BTIndexPage*)currIndex)->get_page_no((void*)&childkey, headerpage.keytype, child);
         status = MINIBASE_BM->unpinPage(currPage, 0, 1);
         
         if(child!=INVALID_PAGE || status == OK){ // find the child
@@ -792,7 +792,7 @@ Status BTreeFile::Search_parent(const PageId targetchild, PageId currPage, const
 
 
 // may recursively insert, split, search_parent
-Status BTreeFile::Insert_helper(PageId insertLoc, const void *key, Datatype datatype, nodetype createdtype)
+Status BTreeFile::Insert_helper(PageId insertLoc, Keytype &key, Datatype datatype, nodetype createdtype)
 {
     Status status = OK;
     
@@ -804,7 +804,10 @@ Status BTreeFile::Insert_helper(PageId insertLoc, const void *key, Datatype data
     // make the entry intended to insert
     KeyDataEntry insertOne;
     int entryLen;
-    make_entry(&insertOne,headerpage.keytype,key,createdtype, datatype, &entryLen); //only use to get the lenth
+    make_entry(&insertOne,headerpage.keytype,(void*)&key,createdtype, datatype, &entryLen); //only use to get the lenth
+
+
+
     
     // see if it need split
     SortedPage* targetPage;
@@ -812,12 +815,12 @@ Status BTreeFile::Insert_helper(PageId insertLoc, const void *key, Datatype data
     status = MINIBASE_BM->unpinPage(insertLoc, 0, 1);  // because I may pin it again in split function
     
     if(targetPage->available_space()<entryLen){  // no enough space, need split
-        
+       //printf("entrylen %d available_space()%d \n",entryLen,targetPage->available_space()); 
         // split into two page, <upkey, leftchild> will be copy or push up
         PageId leftchild;
-        void *upkey;
+        Keytype upkey;
         Split(insertLoc, leftchild, upkey);
-        
+        printf("end split\n");
         // check if it is the root
         if(insertLoc == headerpage.rootPageID){
             // create a new page, make rootPage point to it
@@ -828,7 +831,7 @@ Status BTreeFile::Insert_helper(PageId insertLoc, const void *key, Datatype data
             headerpage.rootPageID = newroot;
             headerpage.PageType = INDEX;    // once depth>1, the root is INDEX
             RID insertRid;
-            rootpage->insertKey(upkey, headerpage.keytype, insertLoc, insertRid);
+            rootpage->insertKey((void*)&upkey, headerpage.keytype, insertLoc, insertRid);
             status = MINIBASE_BM->unpinPage(newroot, 1, 1); // dirty
         }
         else{
@@ -850,11 +853,11 @@ Status BTreeFile::Insert_helper(PageId insertLoc, const void *key, Datatype data
         // insert the insertOne entry
         if(createdtype==INDEX){
             RID rid;
-            ((BTIndexPage*)targetPage)->insertKey(key, headerpage.keytype, datatype.pageNo, rid);
+            ((BTIndexPage*)targetPage)->insertKey((void*)&key, headerpage.keytype, datatype.pageNo, rid);
         }
         else if(createdtype==LEAF){
             RID rid;
-            ((BTLeafPage*)targetPage)->insertRec(key, headerpage.keytype, datatype.rid, rid);
+            ((BTLeafPage*)targetPage)->insertRec((void*)&key, headerpage.keytype, datatype.rid, rid);
         }
     }
 
@@ -863,7 +866,7 @@ Status BTreeFile::Insert_helper(PageId insertLoc, const void *key, Datatype data
 
 // split the page into two page, copyup (leaf), pushup(index) key
 // move former half to the new node, then we need not update parent's pointer
-Status BTreeFile::Split(PageId splitTarget, PageId &leftchild, void *upkey)
+Status BTreeFile::Split(PageId splitTarget, PageId &leftchild, Keytype &upkey)
 {
     Status status = OK;
     
@@ -878,7 +881,7 @@ Status BTreeFile::Split(PageId splitTarget, PageId &leftchild, void *upkey)
     // get half number of entries
     int halfnum = rightchild->numberOfRecords()/2;
     
-    // create the rightchild page
+    // create the leftchild page
     SortedPage *newpage;
     status = MINIBASE_BM->newPage(leftchild, (Page* &)newpage);
     newpage->init(leftchild);
@@ -913,7 +916,7 @@ Status BTreeFile::Split(PageId splitTarget, PageId &leftchild, void *upkey)
         
         status = rightchild->getRecord(currRID,(char*)&recPtr,recLen);   // get record
         recordCnt ++;
-        
+        cout<<recordCnt<<endl;
         // unpack the entry
         Keytype targetkey;
         Datatype targetdata;
@@ -941,7 +944,7 @@ Status BTreeFile::Split(PageId splitTarget, PageId &leftchild, void *upkey)
         }
         else{  // the first one in right child
 
-            upkey = &targetkey;
+            upkey = targetkey;
             if(ndtype==INDEX){  // if index node, delete the key node for push up
                 status = rightchild->nextRecord(prevRID,currRID);
             }
