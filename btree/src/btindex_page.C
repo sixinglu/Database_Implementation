@@ -31,7 +31,7 @@ Status BTIndexPage::insertKey (const void *key,
     make_entry(&tmpEntry,key_type,key,ndtype,dtype,
                &entry_len);
     
-    insertRecord (key_type, (char *)&tmpEntry, entry_len,rid);
+    insertRecord(key_type, (char *)&tmpEntry, entry_len,rid);
     return OK;
 }
 
@@ -94,19 +94,19 @@ Status BTIndexPage::get_page_no(const void *key,
         status = this->getRecord(currRID,(char*)&recPtr,recLen);   // read the next index record
         
         // read the key from entry
-        void *targetkey;  // the key in the tree
-        Datatype *targetdata;
-        get_key_data(targetkey, targetdata, &recPtr, recLen, INDEX); // must be index
+        KeyDataEntry targetkey;  // the key in the tree
+        Datatype targetdata;
+        get_key_data(&targetkey, &targetdata, &recPtr, recLen, INDEX); // must be index
         
         // compare the key
-        int compareResult = keyCompare(key,targetkey,key_type);
+        int compareResult = keyCompare(key,&targetkey.key,key_type);
 //        if(compareResult==0){  // the key already there
 //            return DONE;
 //        }
         if(compareResult<0){  // the insert key is smaller
             
             // this record point to the page is the next level search page
-            pageNo = targetdata->pageNo;
+            pageNo = targetdata.pageNo;
             return OK;
             
         }

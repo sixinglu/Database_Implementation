@@ -48,11 +48,15 @@ Status SortedPage::insertRecord (AttrType key_type,
 		RID& rid)
 {
 	// put your code here
+
 	RID tmpRid;
 	Status status;
 	//standard insert
 	status = HFPage::insertRecord(recPtr,recLen,tmpRid);
+printf("sorted insert len% d, slotcnt%d, free space %d,pageNo %d slotNo %d\n",recLen,this->slotCnt,freeSpace,tmpRid.pageNo,tmpRid.slotNo,OK,status);
 	if(status != OK){
+//return DONE;
+printf("dead insert\n");
 		return MINIBASE_FIRST_ERROR( SORTEDPAGE, INSERT_REC_FAILED );
 	}
 	int slotTail = tmpRid.slotNo;
