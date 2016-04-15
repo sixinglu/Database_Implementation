@@ -14,7 +14,7 @@
 #include "btreefilescan.h"
 #include "bt.h"
 
-#define ADVANCED_DELTE 1
+#define ADVANCED_DELTE 0
 
 // Define your error code for B+ tree here
 // enum btErrCodes  {...}
@@ -79,29 +79,29 @@ class BTreeFile: public IndexFile
     
     // recursively search, return leaf PageID
     // called in Insert_helper()
-    Status Search_record(PageId& result, PageId currPage, const void *key);
+    Status Search_record(PageId& result, PageId currPage, Keytype &key);
     
     // recursively search the parent of the split target, child could be index/leaf
     // called in Insert_helper()
-    Status Search_parent(const PageId child, PageId currPage, const void *childkey, PageId& parent);
+    Status Search_parent(const PageId child, PageId currPage, Keytype &childkey, PageId& parent);
     
     // split the page into two page, copyup (leaf), pushup(index) key
-    Status Split(PageId splitTarget, PageId &rightchild, void *upkey);
+    Status Split(PageId splitTarget, PageId &rightchild,  Keytype &upkey);
     
     // may recursively insert, split, search_index
-    Status Insert_helper(PageId insertLoc, const void *key, Datatype datatype, nodetype createdtype);
+    Status Insert_helper(PageId insertLoc, Keytype &key, Datatype datatype, nodetype createdtype);
     
     
     /******* Delete *****/
-    Status Search_index(PageId& indexPage, PageId& leafPage, PageId currPage, const void *key );
-    bool get_matchedkey_page(SortedPage* currIndex, const void *key, PageId & recordpageId, PageId& child);
+    Status Search_index(PageId& indexPage, PageId& leafPage, PageId currPage, Keytype &key );
+    bool get_matchedkey_page(SortedPage* currIndex, Keytype &key, PageId & recordpageId, PageId& child);
     
     // delete helper to recursively call, for the merge
-    Status Delete_helper(PageId currentDel, const void *key, const RID rid);
+    Status Delete_helper(PageId currentDel, Keytype &key, const RID rid);
     //Status Delete_1record(SortedPage* deleteTarget, nodetype ndtype, const RID rid);  // sub funtion for code reusage
     
     // sibling redistribution
-    bool find_sibling(SortedPage* currIndex, const void *key, PageId &LeftSiblingPage, PageId &RightSiblingPage, RID* parentRID, RID*rightParent, BTIndexPage* parentNode);
+    bool find_sibling(SortedPage* currIndex, Keytype &key, PageId &LeftSiblingPage, PageId &RightSiblingPage, RID* parentRID, RID*rightParent, BTIndexPage* parentNode);
     Status leftDistribute(SortedPage* current, SortedPage* left, BTIndexPage* parent);
     Status rightDistibute(SortedPage* current, SortedPage* right, BTIndexPage* parent);
     
