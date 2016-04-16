@@ -851,41 +851,44 @@ Status BTreeFile::Insert_helper(PageId insertLoc, Keytype &key, Datatype datatyp
 		// if less than right min, go left child
 		// if larger than right min, go right
 		SortedPage* leftPage;
-		status = MINIBASE_BM->pinPage(insertLoc, (Page *&)leftPage, 1);
-		/*
+		status = MINIBASE_BM->pinPage(leftchild, (Page *&)leftPage, 1);
+		
 		RID leftMin;
-		leftPage->firstRecord(&leftMin);
+		leftPage->firstRecord(leftMin);
 		KeyDataEntry recPtr;
 		int recLen;
 		status = leftPage->getRecord(leftMin,(char*)&recPtr,recLen);   // read the next index record
-		nodetype ndtype = leftPage->get_type();
+		nodetype ndtype = (nodetype)leftPage->get_type();
 		// read the key from entry
-		KeyDataEntry leftkey;  // the key in the tree
+		KeyDataEntry leftkey;
 		Datatype targetdata;
 		get_key_data(&leftkey, &targetdata, &recPtr, recLen, ndtype); 
-		//left min key read */
+		//left min key read
 
-		KeyDataEntry recPtr;
-		int recLen;
+		//KeyDataEntry recPtr;
+		//int recLen;
 		SortedPage* rightPage;
 		RID rightMin;
-		Datatype targetdata;
+		//Datatype targetdata;
 		status = MINIBASE_BM->pinPage(insertLoc, (Page *&)rightPage, 1);
-		nodetype ndtype = (nodetype)rightPage->get_type();
+		//nodetype ndtype = (nodetype)rightPage->get_type();
 		rightPage->firstRecord(rightMin);
 		status = rightPage->getRecord(rightMin,(char*)&recPtr,recLen);
 		KeyDataEntry rightkey;
 		get_key_data(&rightkey, &targetdata, &recPtr, recLen, ndtype); 
 
 		//right min key read
-		//int compareResLeft = 0;
+		int compareResLeft = 0;
 		int compareResRight = 0;
-		//compareResLeft = keyCompare((void *)&key, ( void *)&leftkey, headerpage.keytype);
+		compareResLeft = keyCompare((void *)&key, ( void *)&leftkey, headerpage.keytype);
 		compareResRight = keyCompare((void *)&key, ( void *)&rightkey, headerpage.keytype);
 		// search parent
 		PageId parent = INVALID_PAGE;
 		status = Search_parent(insertLoc, headerpage.rootPageID, key, parent); // search start from root
 		RID rid;
+        if(compareResLeft<0){ // inserting key is smallest in the left (new) child page
+            upkey = leftkey.key;
+        }
  		if( compareResRight < 0){
 			//second case, go left child
 			if(ndtype == LEAF){
@@ -904,7 +907,8 @@ Status BTreeFile::Insert_helper(PageId insertLoc, Keytype &key, Datatype datatyp
 				((BTIndexPage*)rightPage)->insertKey((void*)&key, headerpage.keytype, datatype.pageNo, rid);
 			}
 		}
-
+        status = MINIBASE_BM->unpinPage(insertLoc, 1, 1); // dirty
+        status = MINIBASE_BM->unpinPage(leftchild, 1, 1); // dirty
 
 
 		if(parent == INVALID_PAGE){
@@ -917,29 +921,41 @@ Status BTreeFile::Insert_helper(PageId insertLoc, Keytype &key, Datatype datatyp
 			headerpage.rootPageID = rootNewPid;
 			headerpage.PageType = INDEX;
 			//reading min key from old root
-		KeyDataEntry recPtr2;
-		int recLen2;
-		SortedPage* oldPage;
-		RID oldMin;
-		Datatype olddata;
-		status = MINIBASE_BM->pinPage(oldRootPid, (Page *&)oldPage, 1);
-		nodetype ndtype = (nodetype)oldPage->get_type();
-		oldPage->firstRecord(oldMin);
-		status = oldPage->getRecord(oldMin,(char*)&recPtr2,recLen2);
-		KeyDataEntry oldkey;
-		get_key_data(&oldkey, &olddata, &recPtr2, recLen2, ndtype); 
+            KeyDataEntry recPtr2;
+            int recLen2;
+            SortedPage* oldPage;
+            RID oldMin;
+            Datatype olddata;
+            status = MINIBASE_BM->pinPage(oldRootPid, (Page *&)oldPage, 1);
+            nodetype ndtype = (nodetype)oldPage->get_type();
+            oldPage->firstRecord(oldMin);
+            status = oldPage->getRecord(oldMin,(char*)&recPtr2,recLen2);
+            KeyDataEntry oldkey;
+            get_key_data(&oldkey, &olddata, &recPtr2, recLen2, ndtype); 
 			rootNewIndexPage->insertKey((void*)&oldkey, headerpage.keytype, oldRootPid, rid);
 			rootNewIndexPage->insertKey((void*)&upkey,headerpage.keytype, leftchild, rid);
+            status = MINIBASE_BM->unpinPage(oldRootPid, 0, 1);
+            status = MINIBASE_BM->unpinPage(rootNewPid, 1, 1);
 			return status;
 
 		}
-
+        
+        // if the right child is come from parent's prevLink. need insert the first key into parent and clear the prevLink
+        BTIndexPage* parentPage;
+        status = MINIBASE_BM->pinPage(parent,(Page *&)parentPage, 1);
+        if(parentPage->getLeftLink()==insertLoc){
+            parentPage->setLeftLink(INVALID_PAGE);
+            status = MINIBASE_BM->unpinPage(parent, 1, 1);  // clear prevLink
+            status = Insert_helper(parent, rightkey.key, rightkey.data,INDEX);
+        }
+        else{
+            status = MINIBASE_BM->unpinPage(parent, 0, 1);
+        }
+        
 		// call Insert_helper to insert the overflowed key upper, second split cannot be type leaf, so dataRid is useless
 		Datatype newdatatype;
 		newdatatype.pageNo = leftchild;
 		status = Insert_helper(parent, upkey, newdatatype,INDEX);
-
-		//        }
 
 
 	}

@@ -87,6 +87,7 @@ Status BTIndexPage::get_page_no(const void *key,
     
     // read the key inside index record one by one
     RID currRID, prevRID;
+    PageId prev_pointTo = INVALID_PAGE;
     status = this->firstRecord(currRID);               // read the first index RID
     do{
         KeyDataEntry recPtr;
@@ -99,16 +100,37 @@ Status BTIndexPage::get_page_no(const void *key,
         Datatype targetdata;
         get_key_data(&targetkey, &targetdata, &recPtr, recLen, INDEX); // must be index
         
+        prev_pointTo = targetdata.pageNo;
+        
         // compare the key
         int compareResult = keyCompare(key,&targetkey.key,key_type);
 //        if(compareResult==0){  // the key already there
 //            return DONE;
 //        }
-            printf("compare result %d\n",compareResult);
+
         if(compareResult<0){  // the insert key is smaller
-            printf("page no found\n");
+            
             // this record point to the page is the next level search page
-            pageNo = targetdata.pageNo;
+            if( prev_pointTo!=INVALID_PAGE ){
+                pageNo = prev_pointTo;
+            }
+            else{  // key smaller than all index keys
+                PageId prevlink = this->getLeftLink();
+                if(prevlink != INVALID_PAGE){
+                    pageNo = prevlink;
+                }
+                else{   // prevLink == NULL, create a new page
+                    PageId NewPid;
+                    status = MINIBASE_DB->allocate_page(NewPid);
+                    BTIndexPage *NewIndexPage;
+                    status = MINIBASE_BM->newPage(NewPid, (Page* &)NewIndexPage);
+                    NewIndexPage->init(NewPid);
+                    this->setLeftLink(NewPid);
+                    
+                    pageNo = NewPid;
+                }
+            }
+            
             return OK;
             
         }
@@ -118,6 +140,8 @@ Status BTIndexPage::get_page_no(const void *key,
         
     }
     while(this->nextRecord(prevRID,currRID)==OK);
+    
+    pageNo = prev_pointTo;  // key larger than all index keys, choose the last one
     
     return status;
 }
