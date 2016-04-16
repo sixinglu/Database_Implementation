@@ -53,10 +53,10 @@ Status SortedPage::insertRecord (AttrType key_type,
 	Status status;
 	//standard insert
 	status = HFPage::insertRecord(recPtr,recLen,tmpRid);
-printf("sorted insert len% d, slotcnt%d, free space %d,pageNo %d slotNo %d\n",recLen,this->slotCnt,freeSpace,tmpRid.pageNo,tmpRid.slotNo,OK,status);
+//printf("sorted insert len% d, slotcnt%d, free space %d,pageNo %d slotNo %d\n",recLen,this->slotCnt,freeSpace,tmpRid.pageNo,tmpRid.slotNo,OK,status);
 	if(status != OK){
 //return DONE;
-printf("dead insert\n");
+//printf("dead insert\n");
 		return MINIBASE_FIRST_ERROR( SORTEDPAGE, INSERT_REC_FAILED );
 	}
 	int slotTail = tmpRid.slotNo;
@@ -68,18 +68,21 @@ printf("dead insert\n");
 	for(int i = 0; i < this->slotCnt; i++){
 	//if every record > new record, slotPivot = 0
 	//if every record < new record, slotPivot = tmprid.slotNo
+if(i == slotTail) continue;
 		if(this->slot[i].length != EMPTY_SLOT){
 		char* recordKey;
 		recordKey = &this->data[this->slot[i].offset];
-			if(keyCompare(recordKey,recPtr,key_type)){
+		//printf("recordkey %drecptr key%d\n",*recordKey, *recPtr);
+			if(keyCompare(recordKey,recPtr,key_type) > 0){
 			slotPivot = prevSlot;
+			break;
 			}
 		prevSlot = i;
 		}
 	}
 	//every slot after pivot points to a larger key than each other
 	//yet pivot holds the minimum key, so they have to shift by one
-	for(int i = slotPivot + 1; i < this->slotCnt; i++){
+	for(int i = slotPivot; i < this->slotCnt; i++){
 		if(this->slot[i].length != EMPTY_SLOT){
 		//switch
 		int tmpOffset = this->slot[i].offset;
@@ -87,6 +90,7 @@ printf("dead insert\n");
 		this->slot[slotTail].offset = tmpOffset;
 		}
 	}
+slotPrint();
 	return OK;
 }
 

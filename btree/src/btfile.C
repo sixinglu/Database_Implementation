@@ -828,6 +828,7 @@ Status BTreeFile::Insert_helper(PageId insertLoc, Keytype &key, Datatype datatyp
 		// split into two page, <upkey, leftchild> will be copy or push up
 		PageId leftchild;
 		Keytype upkey;
+targetPage->slotPrint();
 		Split(insertLoc, leftchild, upkey);
 		printf("end split\n");
 		// check if it is the root
@@ -880,8 +881,8 @@ Status BTreeFile::Insert_helper(PageId insertLoc, Keytype &key, Datatype datatyp
 		//right min key read
 		int compareResLeft = 0;
 		int compareResRight = 0;
-		compareResLeft = keyCompare((void *)&key, ( void *)&leftkey, headerpage.keytype);
-		compareResRight = keyCompare((void *)&key, ( void *)&rightkey, headerpage.keytype);
+		compareResLeft = keyCompare((void *)&key, ( void *)&leftkey.key, headerpage.keytype);
+		compareResRight = keyCompare((void *)&key, ( void *)&rightkey.key, headerpage.keytype);
 		// search parent
 		PageId parent = INVALID_PAGE;
 		status = Search_parent(insertLoc, headerpage.rootPageID, key, parent); // search start from root
