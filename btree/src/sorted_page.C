@@ -108,7 +108,7 @@ Status SortedPage::deleteRecord (const RID& rid)
 int SortedPage::numberOfRecords()
 {
 	// put your code here
-	int i,num_records;
+	int i,num_records = 0;
 	for(i = 0; i < this->slotCnt; i++){
 		if(this->slot[i].length != EMPTY_SLOT)
 			num_records++;

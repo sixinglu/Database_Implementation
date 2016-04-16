@@ -129,7 +129,7 @@ void BTreeTest::test1() {
 
 
     // test insert()
-    num = 2000;
+    num = 70;
     
 struct dummy{
 RID r;

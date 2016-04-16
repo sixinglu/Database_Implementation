@@ -78,6 +78,7 @@ Status BTIndexPage::get_page_no(const void *key,
                                 PageId & pageNo)
 {
     Status status = OK;
+
     
     // if this page is deleted
     if(this->empty()==true){
@@ -103,8 +104,9 @@ Status BTIndexPage::get_page_no(const void *key,
 //        if(compareResult==0){  // the key already there
 //            return DONE;
 //        }
+            printf("compare result %d\n",compareResult);
         if(compareResult<0){  // the insert key is smaller
-            
+            printf("page no found\n");
             // this record point to the page is the next level search page
             pageNo = targetdata.pageNo;
             return OK;
