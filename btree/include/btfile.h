@@ -77,20 +77,12 @@ class BTreeFile: public IndexFile
     
     /******* Insert *****/
     
-    // recursively search, return leaf PageID
-    // called in Insert_helper()
-    Status Search_record(PageId& result, PageId currPage, Keytype &key);
-    
-    // recursively search the parent of the split target, child could be index/leaf
-    // called in Insert_helper()
-    Status Search_parent(const PageId child, PageId currPage, Keytype &childkey, PageId& parent);
-    
     // split the page into two page, copyup (leaf), pushup(index) key
-    Status Split(PageId splitTarget, PageId &rightchild,  Keytype &upkey);
+    Status Split(PageId splitTarget, Keytype &insertkey, Datatype insertData, PageId &rightchild, Keytype &upkey);
     
     // may recursively insert, split, search_index
-    Status Insert_helper(PageId insertLoc, Keytype &key, Datatype datatype, nodetype createdtype);
-    
+    //Status Insert_helper(PageId insertLoc, Keytype &key, Datatype datatype, nodetype createdtype);
+    Status Search_Insert_Helper(PageId currPage, Keytype &insertkey, Datatype insertData, PageId &rightchild, Keytype &upkey);
     
     /******* Delete *****/
     Status Search_index(PageId& indexPage, PageId& leafPage, PageId currPage, Keytype &key );
@@ -108,6 +100,12 @@ class BTreeFile: public IndexFile
     // merging algorithm
     Status leftMerge(SortedPage* current, SortedPage* left, BTIndexPage* parent, RID* parentRID);
     Status rightMerge(SortedPage* current, SortedPage* right, BTIndexPage* parent, RID* parentRID, RID* rightParent);
+    
+    // recursively search the parent of the split target, child could be index/leaf
+    Status Search_parent(const PageId child, PageId currPage, Keytype &childkey, PageId& parent);
+    
+    // recursively search, return leaf PageID
+    Status Search_record(PageId& result, PageId currPage, Keytype &key);
     
     
     /******** Destory file *********/
