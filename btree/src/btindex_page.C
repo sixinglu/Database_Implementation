@@ -30,7 +30,7 @@ Status BTIndexPage::insertKey (const void *key,
     nodetype ndtype = INDEX;
     make_entry(&tmpEntry,key_type,key,ndtype,dtype,
                &entry_len);
-    
+    //printf("int key %d, pageno %d\n",key,pageNo);
     insertRecord(key_type, (char *)&tmpEntry, entry_len,rid);
     return OK;
 }

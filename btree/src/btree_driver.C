@@ -129,7 +129,7 @@ void BTreeTest::test1() {
 
 
     // test insert()
-    num = 70;
+    num = 50;
     
 struct dummy{
 RID r;
@@ -155,6 +155,7 @@ int key;
         }
     }
 
+//btf->treeDump(btf->headerpage.rootPageID);
     // test delete()
 
     cout << "\nstart BTreeIndex deletion" << endl << endl;

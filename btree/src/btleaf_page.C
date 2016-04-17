@@ -48,7 +48,7 @@ Status BTLeafPage::insertRec(const void *key,
     nodetype ndtype = LEAF;
     make_entry(&tmpEntry,key_type,key,ndtype,dtype,
                &entry_len);
-    
+    //printf("insert rec int key %d, datarid pageno %d, datarid slotno %d\n",((Keytype*)key)->intkey,dataRid.pageNo,dataRid.slotNo);
     insertRecord (key_type, (char *)&tmpEntry, entry_len,rid);
     return OK;
 }

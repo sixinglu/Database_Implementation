@@ -23,7 +23,7 @@
 class SortedPage : public HFPage {
  private:
    // No private variables should be declared.
-void  slotPrint();
+
  public:
 
 /*
@@ -74,6 +74,7 @@ void  slotPrint();
   void  set_type(short t) { type = t; }
   // get node type
   short get_type()         { return type; }
+void  slotPrint(nodetype);
 };
 
 #endif

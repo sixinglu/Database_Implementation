@@ -70,10 +70,11 @@ class BTreeFile: public IndexFile
     //              range scan from lo_key to hi_key
 
     int keysize();
-    
+    HeaderPage headerpage;
+        void treeDump(PageId);
   private:
     
-    HeaderPage headerpage;
+
     
     /******* Insert *****/
     
@@ -82,7 +83,7 @@ class BTreeFile: public IndexFile
     
     // may recursively insert, split, search_index
     //Status Insert_helper(PageId insertLoc, Keytype &key, Datatype datatype, nodetype createdtype);
-    Status Search_Insert_Helper(PageId currPage, Keytype &insertkey, Datatype insertData, PageId &rightchild, Keytype &upkey);
+    Status Search_Insert_Helper(PageId currPage, Keytype insertkey, Datatype insertData, PageId &rightchild, Keytype &upkey);
     
     /******* Delete *****/
     Status Search_index(PageId& indexPage, PageId& leafPage, PageId currPage, Keytype &key );
