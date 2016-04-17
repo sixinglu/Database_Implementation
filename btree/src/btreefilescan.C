@@ -19,25 +19,61 @@
 
 BTreeFileScan::~BTreeFileScan()
 {
-  // put your code here
+    // not 100% sure
+    delete this;
 }
 
 
 Status BTreeFileScan::get_next(RID & rid, void* keyptr)
 {
+    
+    Status status;
+    
   // put your code here
-  return OK;
+    SortedPage *current;
+    status = MINIBASE_BM->pinPage(currentPage, (Page* &)current, 1);
+    
+    PageId nextPageId = current->getNextPage();
+    SortedPage *next;
+    status = MINIBASE_BM->pinPage(nextPageId, (Page* &)next, 1);
+    
+    // read according record
+    char *recPtr;
+    int recLen;
+    status = next->getRecord(rid,recPtr,recLen);  // return value rid
+    
+    // get the key
+    Datatype *targetdata;
+    get_key_data(keyptr, targetdata, (KeyDataEntry *)recPtr, recLen, INDEX); //return value keyptr
+    
+    // unpin
+    status = MINIBASE_BM->unpinPage(currentPage, 0, 1);
+    status = MINIBASE_BM->unpinPage(nextPageId, 0, 1);
+    
+    // update
+    currentPage = nextPageId;
+    currRID = rid;
+    
+    return OK;
 }
 
 Status BTreeFileScan::delete_current()
 {
-  // put your code here
-  return OK;
+    // do I need to delete the key as well?
+    
+    Status status;
+    
+    SortedPage *current;
+    status = MINIBASE_BM->pinPage(currentPage, (Page* &)current, 1);
+    
+    current->deleteRecord(currRID);
+    status = MINIBASE_BM->unpinPage(currentPage, 1, 0);
+    
+    return status;
 }
 
 
 int BTreeFileScan::keysize() 
 {
-  // put your code here
-  return OK;
+    return Keysize;
 }

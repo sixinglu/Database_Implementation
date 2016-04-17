@@ -28,7 +28,17 @@ public:
     // destructor
     ~BTreeFileScan();
 private:
-
+    
+    PageId leftmostPage;
+    PageId rightmostPage;
+    
+    RID leftmostRID;
+    RID rightmostRID;
+    
+    PageId currentPage;
+    RID currRID;
+    
+    int Keysize;
 };
 
 #endif
