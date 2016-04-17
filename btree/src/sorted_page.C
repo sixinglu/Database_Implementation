@@ -40,6 +40,7 @@ void SortedPage::slotPrint(nodetype ndtype){
 			Keytype* cur_key = (Keytype*)&data[slot[i].offset];
 			char* dataPtr;
 			if(ndtype == INDEX) {
+				printf("left link %d\n", this->getPrevPage());
 				dataPtr = &data[slot[i].offset + slot[i].length -sizeof(PageId)];
 				printf("slot %d has offset %d, has int key %d, char key %s, data pageno %d\n",i,\
 						slot[i].offset,cur_key->intkey,cur_key->charkey,\
@@ -73,7 +74,7 @@ Status SortedPage::insertRecord (AttrType key_type,
 	//printf("sorted insert len% d intkey %d, rid.pageno %d, rid.slotno %d\nslotNo %d intkey %d index pageno %d, leaf pageno %d slotno %d \n",recLen,((KeyDataEntry*)recPtr)->key.intkey,((KeyDataEntry*)recPtr)->data.rid.pageNo,((KeyDataEntry*)recPtr)->data.rid.slotNo,\
 	tmpRid.slotNo,((KeyDataEntry*)(ptr2))->key.intkey,((KeyDataEntry*)(ptr2))->data.pageNo,\
 		((KeyDataEntry*)(ptr2))->data.rid.pageNo,((KeyDataEntry*)(ptr2))->data.rid.slotNo);
-	printf("origin int1 %d int2 %d\nafter int 1 %d int2 %d\n",*recPtr,recPtr[4], *ptr2, ptr2[4]);
+	//printf("origin int1 %d int2 %d\nafter int 1 %d int2 %d\n",*recPtr,recPtr[4], *ptr2, ptr2[4]);
 	if(status != OK){
 		//return DONE;
 		//printf("dead insert\n");

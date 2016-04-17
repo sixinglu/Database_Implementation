@@ -95,19 +95,16 @@ Status BTIndexPage::get_page_no(const void *key,
     status = this->firstRecord(currRID);               // read the first index RID
     do{
         KeyDataEntry recPtr;
+	char* tmpPtr =(char*)&recPtr;
         int recLen;
-        
+        Keytype* cur_key = (Keytype*)&recPtr;
         status = this->getRecord(currRID,(char*)&recPtr,recLen);   // read the next index record
-        
-        // read the key from entry
-        KeyDataEntry targetkey;  // the key in the tree
-        Datatype targetdata;
-        get_key_data(&targetkey, &targetdata, &recPtr, recLen, INDEX); // must be index
-        
-        prev_pointTo = targetdata.pageNo;
+
+        pageNo = *(PageId*)&tmpPtr[recLen-sizeof(PageId)];
+
         
         // compare the key
-        int compareResult = keyCompare(key,&targetkey.key,key_type);
+        int compareResult = keyCompare(key,cur_key,key_type);
 //        if(compareResult==0){  // the key already there
 //            return DONE;
 //        }
@@ -139,7 +136,7 @@ Status BTIndexPage::get_page_no(const void *key,
             
         }
         // else the insert key is larger, move on to next key record
-        
+        prev_pointTo = pageNo;
         prevRID = currRID;
         
     }

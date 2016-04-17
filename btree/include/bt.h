@@ -157,5 +157,8 @@ int get_key_length(const void *key, const AttrType key_type);
  */   
 int get_key_data_length(const void *key, const AttrType key_type, 
                         const nodetype ndtype);
-                   
+/*
+ * unpack_rid: given a rid, read out the key and its data by calling getrecord()
+ */  
+//int unpack_rid(RID rid, PageId, nodetype,);                
 #endif
