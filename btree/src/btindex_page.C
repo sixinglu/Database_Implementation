@@ -31,7 +31,11 @@ Status BTIndexPage::insertKey (const void *key,
     make_entry(&tmpEntry,key_type,key,ndtype,dtype,
                &entry_len);
     //printf("int key %d, pageno %d\n",key,pageNo);
-    insertRecord(key_type, (char *)&tmpEntry, entry_len,rid);
+char* rec = new char[entry_len];
+get_key_data(rec,(Datatype *)&rec[entry_len - sizeof(pageNo)],&tmpEntry,entry_len,INDEX);
+    printf("insert key length %d int key %d, key pageno %d\n",entry_len,((Keytype*)key)->intkey,rec[entry_len - sizeof(pageNo)]);
+    insertRecord(key_type, rec, entry_len,rid);
+delete[] rec;
     return OK;
 }
 

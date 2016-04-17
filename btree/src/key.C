@@ -99,7 +99,7 @@ int get_key_length(const void *key, const AttrType key_type)
     
     // calculate key size
     if(key_type==attrString){
-        keylenth = sizeof( ((Keytype*)key)->charkey );
+        keylenth = strlen(((Keytype*)key)->charkey) + 1;;
     }
     else if(key_type==attrInteger){
         keylenth = sizeof( ((Keytype*)key)->intkey );

@@ -34,19 +34,26 @@ const char* SortedPage::Errors[SortedPage::NR_ERRORS] = {
  *    o rid is the record id of the record inserted.
  */
 void SortedPage::slotPrint(nodetype ndtype){
-printf("this is page %d\n",this->curPage);
-for(int i = 0; i < this->slotCnt; i++){
-	if(this->slot[i].length != EMPTY_SLOT){
-		Keytype cur_key;
-		Datatype targetdata;
-		get_key_data(&cur_key, &targetdata, (KeyDataEntry*)&data[slot[i].offset], slot[i].length, ndtype); 
-	printf("slot %d has offset %d, has int key %d, char key %s, index rid %d, rid pageno %d, rid slotno %d\n",i,\
-		slot[i].offset,cur_key.intkey,cur_key.charkey,\
-		targetdata.pageNo,\
-		targetdata.rid.pageNo,targetdata.rid.slotNo
-		);
+	printf("this is page %d\n",this->curPage);
+	for(int i = 0; i < this->slotCnt; i++){
+		if(this->slot[i].length != EMPTY_SLOT){
+			Keytype* cur_key = (Keytype*)&data[slot[i].offset];
+			char* dataPtr;
+			if(ndtype == INDEX) {
+				dataPtr = &data[slot[i].offset + slot[i].length -sizeof(PageId)];
+				printf("slot %d has offset %d, has int key %d, char key %s, data pageno %d\n",i,\
+						slot[i].offset,cur_key->intkey,cur_key->charkey,\
+						*dataPtr
+				      );
+			}
+			else {dataPtr = &data[slot[i].offset + slot[i].length -sizeof(RID)];
+				//get_key_data(&cur_key, &targetdata, (KeyDataEntry*)&data[slot[i].offset], slot[i].length, ndtype); 
+				printf("slot %d has offset %d, has int key %d, char key %s, rid pageno %d slotno %d\n",i,\
+						slot[i].offset,cur_key->intkey,cur_key->charkey,\
+						*dataPtr,dataPtr[4]
+				      );
 
-;
+			}
 		}
 	}
 }
@@ -61,12 +68,15 @@ Status SortedPage::insertRecord (AttrType key_type,
 	Status status;
 	//standard insert
 	status = HFPage::insertRecord(recPtr,recLen,tmpRid);
-//printf("sorted insert len% d int1 %d, int2 %d, int3 %d\nslotNo %d intkey %d index pageno %d, leaf pageno %d slotno %d \n",recLen,((KeyDataEntry*)recPtr)->key.intkey,((KeyDataEntry*)recPtr)->data.rid.pageNo,((KeyDataEntry*)recPtr)->data.rid.slotNo,\
-		tmpRid.slotNo,((KeyDataEntry*)(&data[slot[tmpRid.slotNo].offset]))->key.intkey,((KeyDataEntry*)(&data[slot[tmpRid.slotNo].offset]))->data.pageNo,\
-		((KeyDataEntry*)(&data[slot[tmpRid.slotNo].offset]))->data.rid.pageNo,((KeyDataEntry*)(&data[slot[tmpRid.slotNo].offset]))->data.rid.slotNo);
+	char* ptr1 = recPtr;
+	char* ptr2 = &data[slot[tmpRid.slotNo].offset];
+	//printf("sorted insert len% d intkey %d, rid.pageno %d, rid.slotno %d\nslotNo %d intkey %d index pageno %d, leaf pageno %d slotno %d \n",recLen,((KeyDataEntry*)recPtr)->key.intkey,((KeyDataEntry*)recPtr)->data.rid.pageNo,((KeyDataEntry*)recPtr)->data.rid.slotNo,\
+	tmpRid.slotNo,((KeyDataEntry*)(ptr2))->key.intkey,((KeyDataEntry*)(ptr2))->data.pageNo,\
+		((KeyDataEntry*)(ptr2))->data.rid.pageNo,((KeyDataEntry*)(ptr2))->data.rid.slotNo);
+	printf("origin int1 %d int2 %d\nafter int 1 %d int2 %d\n",*recPtr,recPtr[4], *ptr2, ptr2[4]);
 	if(status != OK){
-//return DONE;
-//printf("dead insert\n");
+		//return DONE;
+		//printf("dead insert\n");
 		return MINIBASE_FIRST_ERROR( SORTEDPAGE, INSERT_REC_FAILED );
 	}
 	int slotTail = tmpRid.slotNo;
@@ -76,31 +86,31 @@ Status SortedPage::insertRecord (AttrType key_type,
 	int slotPivot = slotTail;
 	int prevSlot = 0;
 	for(int i = 0; i < this->slotCnt; i++){
-	//if every record > new record, slotPivot = 0
-	//if every record < new record, slotPivot = tmprid.slotNo
-if(i == slotTail) continue;
+		//if every record > new record, slotPivot = 0
+		//if every record < new record, slotPivot = tmprid.slotNo
+		if(i == slotTail) continue;
 		if(this->slot[i].length != EMPTY_SLOT){
-		char* recordKey;
-		recordKey = &this->data[this->slot[i].offset];
-		//printf("recordkey %drecptr key%d\n",*recordKey, *recPtr);
+			char* recordKey;
+			recordKey = &this->data[this->slot[i].offset];
+			//printf("recordkey %drecptr key%d\n",*recordKey, *recPtr);
 			if(keyCompare(recordKey,recPtr,key_type) > 0){
-			slotPivot = prevSlot;
-			break;
+				slotPivot = prevSlot;
+				break;
 			}
-		prevSlot = i;
+			prevSlot = i;
 		}
 	}
 	//every slot after pivot points to a larger key than each other
 	//yet pivot holds the minimum key, so they have to shift by one
 	for(int i = slotPivot; i < this->slotCnt; i++){
 		if(this->slot[i].length != EMPTY_SLOT){
-		//switch
-		int tmpOffset = this->slot[i].offset;
-		this->slot[i].offset = this->slot[slotTail].offset;
-		this->slot[slotTail].offset = tmpOffset;
+			//switch
+			int tmpOffset = this->slot[i].offset;
+			this->slot[i].offset = this->slot[slotTail].offset;
+			this->slot[slotTail].offset = tmpOffset;
 		}
 	}
-//slotPrint();
+	//slotPrint();
 	return OK;
 }
 
