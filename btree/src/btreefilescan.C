@@ -45,9 +45,11 @@ return DONE;
     	memcpy(keyptr,cur_key,keysize());   //return value keyptr
 	status = MINIBASE_BM->unpinPage(currentPage, 0, 1);
 	getFirst = false;
-	currRID = rid;
+
 	//in case of exact match, only one element in scan
 	if(currRID == rightmostRID) usedUp = true;
+	currRID = rid;
+currentPage = rid.pageNo;
 	return OK;
     }
   

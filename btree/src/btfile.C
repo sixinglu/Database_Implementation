@@ -663,7 +663,7 @@ IndexFileScan *BTreeFile::new_scan(const void *lo_key, const void *hi_key) {
 
 	scanner->Keysize = headerpage.keysize;
 	scanner->getFirst = true;
-
+	scanner->usedUp = false;
 	// go most left LEAF
 	PageId currPageId = headerpage.rootPageID;
 

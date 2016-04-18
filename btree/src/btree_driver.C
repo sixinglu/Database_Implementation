@@ -215,6 +215,7 @@ printf("deleting key = %d\n",kill[i/10].key);
    
     //MinMaxRangeScan with delete_current()
     scan = btf->new_scan(&lokey, &hikey);
+    test_scan(scan);
     int count = 0;
     int size = scan->keysize();
     char* temp = new char[size];
