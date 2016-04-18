@@ -39,6 +39,8 @@ public:
     RID currRID;
     
     int Keysize;
+
+    bool getFirst;
 };
 
 #endif

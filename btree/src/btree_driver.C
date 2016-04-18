@@ -155,13 +155,14 @@ int key;
         }
     }
 
-btf->treeDump(btf->headerpage.rootPageID);
+//btf->treeDump(btf->headerpage.rootPageID);
     // test delete()
 
     cout << "\nstart BTreeIndex deletion" << endl << endl;
     int j = 0;
     for (i = 0; i < num; i++) {
         if (i % 10 == 0) {
+printf("deleting key = %d\n",kill[i/10].key);
 	    j++;
 	    if (btf->Delete(&kill[i/10].key, kill[(i/10)].r) != OK) {
 	    	cout << " Deleting record with key = " << kill[i/10].key << "  [pageNo,slotNo] = ";
@@ -171,10 +172,10 @@ btf->treeDump(btf->headerpage.rootPageID);
 
         }
     }
+btf->treeDump(btf->headerpage.rootPageID);
+    delete btf;
 
-   // delete btf;
-
-    //btf = new BTreeFile(status, "BTreeIndex");
+    btf = new BTreeFile(status, "BTreeIndex");
     if(status == OK)
 	cout<<"\n BTreeIndex opened successfully." << endl << endl;
   
@@ -197,10 +198,10 @@ btf->treeDump(btf->headerpage.rootPageID);
     delete scan;
 
 
-*/
+
     //MinRangeScan;
     scan = btf->new_scan(&lokey, NULL);
-btf->treeDump(btf->headerpage.rootPageID);
+//
     test_scan(scan);
     delete scan;   
 
@@ -255,7 +256,7 @@ btf->treeDump(btf->headerpage.rootPageID);
     delete scan;
 
     delete btf;
-
+*/
     cout << "\n---------------End of Test 1----------------------\n\n";
 }
 
