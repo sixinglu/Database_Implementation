@@ -37,9 +37,9 @@ Status BTreeTest::runTests(){
 
 
 	test1();
-	/*test2();
+	test2();
 	test3();
-	test4();*/
+	test4();
 
 
 	delete minibase_globals;
@@ -155,14 +155,12 @@ int key;
         }
     }
 
-//btf->treeDump(btf->headerpage.rootPageID);
     // test delete()
-/*
+
     cout << "\nstart BTreeIndex deletion" << endl << endl;
     int j = 0;
     for (i = 0; i < num; i++) {
         if (i % 10 == 0) {
-printf("deleting key = %d\n",kill[i/10].key);
 	    j++;
 	    if (btf->Delete(&kill[i/10].key, kill[(i/10)].r) != OK) {
 	    	cout << " Deleting record with key = " << kill[i/10].key << "  [pageNo,slotNo] = ";
@@ -171,8 +169,8 @@ printf("deleting key = %d\n",kill[i/10].key);
 	    }
 
         }
-    }*/
-//btf->treeDump(btf->headerpage.rootPageID);
+    }
+btf->treeDump(btf->headerpage.rootPageID);
     delete btf;
 
     btf = new BTreeFile(status, "BTreeIndex");
@@ -183,9 +181,8 @@ printf("deleting key = %d\n",kill[i/10].key);
     cout << "\n----------- Testing scans -------------" << endl;
     lokey = 20;
     hikey = 40;
-
-    //AllScan
 /*
+    //AllScan
     scan = btf->new_scan(NULL,NULL);
     test_scan(scan);
     delete scan;   
@@ -201,21 +198,19 @@ printf("deleting key = %d\n",kill[i/10].key);
 
     //MinRangeScan;
     scan = btf->new_scan(&lokey, NULL);
-//
     test_scan(scan);
     delete scan;   
-*/
+
     
     //ExactMatch
     scan = btf->new_scan(&hikey, &hikey);
     test_scan(scan);
     delete scan;
 
-
+*/
    
     //MinMaxRangeScan with delete_current()
     scan = btf->new_scan(&lokey, &hikey);
-    test_scan(scan);
     int count = 0;
     int size = scan->keysize();
     char* temp = new char[size];

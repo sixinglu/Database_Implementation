@@ -50,7 +50,7 @@ Status BTLeafPage::insertRec(const void *key,
                &entry_len);
 char* rec = new char[entry_len];
 get_key_data(rec,(Datatype *)&rec[entry_len - sizeof(RID)],&tmpEntry,entry_len,LEAF);
-    printf("insert rec int key %d, datarid pageno %d, datarid slotno %d\n",((Keytype*)key)->intkey,dataRid.pageNo,dataRid.slotNo);
+    //printf("insert rec int key %d, datarid pageno %d, datarid slotno %d\n",((Keytype*)key)->intkey,dataRid.pageNo,dataRid.slotNo);
     insertRecord (key_type, rec, entry_len,rid);
 delete[] rec;
     return OK;

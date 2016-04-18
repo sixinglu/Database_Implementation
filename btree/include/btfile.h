@@ -73,6 +73,7 @@ class BTreeFile: public IndexFile
     int keysize();
     HeaderPage headerpage;
         void treeDump(PageId);
+void leafChain(PageId);
   private:
     
 

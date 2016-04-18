@@ -721,38 +721,28 @@ IndexFileScan *BTreeFile::new_scan(const void *lo_key, const void *hi_key) {
 		if(lo_key != NULL)
 			status = get_leaf_page_no(lo_key,headerpage.keytype,lo_pageno);
 		else{//lo_pageno = leftmost
-			PageId bottom = headerpage.rootPageID, iterator_index = bottom, last_index;
+PageId bottom = headerpage.rootPageID, iterator_index = bottom, prevBottom;
 
-			BTIndexPage* leftFetcher;
-			short this_type = INDEX;
-			status = MINIBASE_BM->pinPage(bottom, (Page* &)leftFetcher, 0 );
-			while(this_type == INDEX){
-				last_index = iterator_index;
-				iterator_index = bottom;
-				status = MINIBASE_BM->pinPage(iterator_index, (Page* &)leftFetcher, 0 );
+BTIndexPage* leftFetcher;
+short this_type;
+status = MINIBASE_BM->pinPage(bottom, (Page* &)leftFetcher, 0 );
+while(this_type == INDEX){
+iterator_index = bottom;
+		status = MINIBASE_BM->pinPage(iterator_index, (Page* &)leftFetcher, 0 );
+prevBottom = bottom;
+bottom =leftFetcher->getLeftLink();
+this_type = leftFetcher->get_type();
 
-				bottom =leftFetcher->getLeftLink();
-				this_type = leftFetcher->get_type();
-
-				status = MINIBASE_BM->unpinPage(iterator_index, 0, 0 );
-			}
-			status = MINIBASE_BM->unpinPage(bottom, 0, 0 );
-
-			//leafChain(iterator_index);
-			lo_pageno = iterator_index;
+status = MINIBASE_BM->unpinPage(iterator_index, 0, 0 );
+}
+status = MINIBASE_BM->unpinPage(bottom, 0, 0 );
+;
+leafChain(prevBottom);
 		}
 		if(hi_key != NULL)
 			status = get_leaf_page_no(hi_key,headerpage.keytype,hi_pageno);
 		else{//hi_pageno = rightmost
-			PageId next_pno = lo_pageno, traverse_pno;
-			BTLeafPage* currLeaf;
-			while(next_pno != INVALID_PAGE){
-				traverse_pno = next_pno;
-				status = MINIBASE_BM->pinPage( traverse_pno, (Page* &)currLeaf, 0 );
-				hi_pageno = traverse_pno;
-				next_pno = currLeaf->getNextPage();
-				status = MINIBASE_BM->unpinPage( traverse_pno, 0, 0 );
-			}
+;
 		}
 		status = MINIBASE_BM->pinPage(lo_pageno, (Page* &)lo_page, 0 );
 		RID curRID,prevRID,resultRID;
@@ -1301,7 +1291,7 @@ Status BTreeFile::Search_Insert_Helper(PageId currPage, Keytype insertkey, Datat
 				rootNewIndexPage->insertKey((void*)&upkey,headerpage.keytype, rightchild, rid);
 				rootNewIndexPage->setLeftLink(oldRootPid);
 				status = MINIBASE_BM->unpinPage(rootNewPid, 1, 1);
-				//rootNewIndexPage->slotPrint(INDEX);
+				rootNewIndexPage->slotPrint(INDEX);
 				rightchild = INVALID_PAGE;  // clear
 			}
 		}
@@ -1347,7 +1337,7 @@ Status BTreeFile::Split(PageId splitTarget, Keytype &insertkey, Datatype insertD
 		status = MINIBASE_BM->unpinPage(next, 1, 1);
 
 		newpage->setPrevPage(splitTarget);
-		leftchild->setNextPage(rightchild);
+		leftchild->setPrevPage(rightchild);
 
 	}
 	else if(ndtype==INDEX){  //  do not need connection
@@ -1528,20 +1518,20 @@ void BTreeFile::leafChain(PageId currPage){
 	nodetype ndtype = (nodetype)currLeaf->get_type();  // be careful to match
 
 	if(ndtype==INDEX){ 
-		printf("leaf chain error!\n");
+printf("leaf chain error!\n");
 	}
 	else{// leaf node only
-		PageId next_pno = currPage, traverse_pno;
-		BTLeafPage* next_leaf;
-		printf("leaf nodes in current tree\n%d ",currPage);
-		while(next_pno != INVALID_PAGE){
-			traverse_pno = next_pno;
-			status = MINIBASE_BM->pinPage( traverse_pno, (Page* &)currLeaf, 0 );
-			next_pno = currLeaf->getNextPage();
-			printf("%d ",next_pno);
-			status = MINIBASE_BM->unpinPage( traverse_pno, 0, 0 );
-		}
-		printf("\nthat's all the leaf\n");
+PageId next_pno = currPage, traverse_pno;
+BTLeafPage* next_leaf;
+printf("leaf nodes in current tree\n");
+while(next_pno != INVALID_PAGE){
+traverse_pno = next_pno;
+status = MINIBASE_BM->pinPage( traverse_pno, (Page* &)currLeaf, 0 );
+next_pno = currLeaf->getNextPage();
+printf("%d ",next_pno);
+status = MINIBASE_BM->unpinPage( traverse_pno, 0, 0 );
+}
+printf("\nthat's all the leaf\n");
 	}
 
 	status = MINIBASE_BM->unpinPage( currPage, 0, 0 );
@@ -1589,14 +1579,14 @@ Status BTreeFile::get_leaf_page_no(const void *key,
 	RID currRID, prevRID;
 	BTIndexPage* curPage;
 	//	int find_flag = 0;
-	PageId tmpPNO = pageNo;
-	//treeDump(pageNo);
+PageId tmpPNO = pageNo;
+//treeDump(pageNo);
 	status = MINIBASE_BM->pinPage( tmpPNO, (Page* &)curPage, 0 );
-	//cout<<pageNo<<endl;
+	cout<<pageNo<<endl;
 	if(curPage->get_type() == LEAF) return OK;
 	PageId prev_pointTo = curPage->getLeftLink();
 	status = curPage->firstRecord(currRID);               // read the first index RID
-	PageId cur_pageNo = -1;
+PageId cur_pageNo = -1;
 	do{
 		KeyDataEntry recPtr;
 		char* tmpPtr =(char*)&recPtr;
@@ -1624,7 +1614,7 @@ Status BTreeFile::get_leaf_page_no(const void *key,
 	while(curPage->nextRecord(prevRID,currRID)==OK);
 	//   if(find_flag != 1)
 	//   pageNo = prev_pointTo;  // key larger than all index keys, choose the last one
-	pageNo = cur_pageNo;
+pageNo = cur_pageNo;
 	return get_leaf_page_no(key, key_type, pageNo);
 }
 
