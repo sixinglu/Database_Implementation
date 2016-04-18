@@ -64,9 +64,8 @@ return DONE;
     	memcpy(keyptr,cur_key,keysize());   //return value keyptr
 	status = MINIBASE_BM->unpinPage(currentPage, 0, 1);
 	usedUp = true;
-	return OK;
+	return DONE;
     }
-
 
     
     SortedPage *current;
@@ -82,18 +81,16 @@ return DONE;
        next = current;
     }
     else{ 
-       bool ifEmpty = false; 
-       while(ifEmpty!=true){
+       bool ifEmpty = true; 
+       while(ifEmpty==true){
             nextPageId = current->getNextPage();
 	
        	    if(nextPageId == INVALID_PAGE){  // reach the end
 		return DONE;
 	    }
-	    status = MINIBASE_BM->pinPage(nextPageId, (Page* &)next, 1);
 	    ifEmpty = next->empty();
-	    status = MINIBASE_BM->unpinPage(nextPageId, 0, 0);
 	}
-    	
+       
 	status = MINIBASE_BM->pinPage(nextPageId, (Page* &)next, 1);
         next->firstRecord(rid);
     } 
