@@ -45,11 +45,13 @@ static error_string_table btree_table( BTREE, BtreeErrorMsgs);
 BTreeFile::BTreeFile (Status& returnStatus, const char *filename)
 {
 	// if the file not exist
-	if(MINIBASE_DB->get_file_entry(filename,headerpage.rootPageID)!=OK){
+PageId headPageId;
+	if(MINIBASE_DB->get_file_entry(filename,headPageId)!=OK){
 		cout<<BtreeErrorMsgs[22]<<endl;
 		returnStatus =  DONE;
 	}
 	else{  // if the file does exist
+MINIBASE_BM->pinPage( headPageId, (Page* &)headerpage, 1 );
 		returnStatus =  OK;
 	}
 
@@ -60,23 +62,28 @@ BTreeFile::BTreeFile (Status& returnStatus, const char *filename,
 		const int keysize)
 {
 	// if the file exist
-	if(MINIBASE_DB->get_file_entry(filename,headerpage.rootPageID)==OK){
+PageId headPageId;
+	if(MINIBASE_DB->get_file_entry(filename,headPageId)==OK){
+MINIBASE_BM->pinPage( headPageId, (Page* &)headerpage, 1 );
 		returnStatus = OK;
 	}
 	else{  // create a new file
-		// allocate space
+
+		// allocate space for header page, add file entry
+		PageId headPageId;
+		returnStatus = MINIBASE_BM->newPage(headPageId, (Page* &)headerpage);
+		returnStatus = MINIBASE_DB->add_file_entry(filename,headPageId);	
+
+		// allocate space for root page
 		SortedPage* newrootPage;  // = new HFPage();
 		returnStatus = MINIBASE_BM->newPage(headerpage.rootPageID, (Page* &)newrootPage);
 		newrootPage->init(headerpage.rootPageID);
 		newrootPage->set_type(LEAF);
-		// add file entry
-		returnStatus = MINIBASE_DB->add_file_entry(filename,headerpage.rootPageID);
 
 		// set the root page parameters
 		headerpage.keytype = keytype;
 		headerpage.keysize = keysize;
 		headerpage.PageType = LEAF;   // set root as LEAF, for search algorithm
-		
 		strcpy(headerpage.filename,filename);
 
 		returnStatus = MINIBASE_BM->unpinPage(headerpage.rootPageID, 1, 1);
@@ -87,7 +94,6 @@ BTreeFile::~BTreeFile ()
 {
 	MINIBASE_BM->flushAllPages();
 }
-
 
 Status BTreeFile::destroyFile ()
 {

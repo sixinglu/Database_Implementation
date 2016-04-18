@@ -47,27 +47,27 @@ Status BTIndexPage::deleteKey (const void *key, AttrType key_type, RID& curRid)
     status = this->firstRecord(currRID);               // read the first index RID
     do{
         KeyDataEntry recPtr;
+	char* tmpPtr =(char*)&recPtr;
         int recLen;
-        
+        Keytype* cur_key = (Keytype*)&recPtr;
         status = this->getRecord(currRID,(char*)&recPtr,recLen);   // read the next index record
+
+        //pageNo = *(PageId*)&tmpPtr[recLen-sizeof(PageId)];        
         
-        // read the key from entry
-        void *targetkey;  // the key in the tree
-        Datatype *targetdata;
-        get_key_data(targetkey, targetdata, &recPtr, recLen, INDEX); // must be index
+       // read the key from entry
         
         
         // compare the key
-        int compareResult = keyCompare(key,targetkey,key_type);
+        int compareResult = keyCompare(key,cur_key,key_type);
         if(compareResult==0){  // the key already there, so delete it
             deleteRecord (currRID);
             return OK;
         }
-        else if(compareResult<0){  // the insert key is smaller
+        else if(compareResult<0){  // the cur key is smaller
             // don't want to delete it
             return DONE;
         }
-        // else the insert key is larger, move on to next key record
+        // else the cur key is larger, move on to next key record
         
         prevRID = currRID;
         
@@ -123,9 +123,11 @@ Status BTIndexPage::get_page_no(const void *key,
                 else{   // prevLink == NULL, create a new page
                     PageId NewPid;
                     status = MINIBASE_DB->allocate_page(NewPid);
-                    BTIndexPage *NewIndexPage;
-                    status = MINIBASE_BM->newPage(NewPid, (Page* &)NewIndexPage);
-                    NewIndexPage->init(NewPid);
+                    SortedPage *NewLeafPage;
+                    status = MINIBASE_BM->newPage(NewPid, (Page* &)NewLeafPage);
+                    NewLeafPage->init(NewPid);
+		    NewLeafPage->set_type(LEAF);
+		    NewLeafPage->setNextPage(pageNo);  // link with the first leaf page
                     this->setLeftLink(NewPid);
                     
                     pageNo = NewPid;

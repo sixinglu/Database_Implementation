@@ -37,9 +37,9 @@ Status BTreeTest::runTests(){
 
 
 	test1();
-	test2();
+	/*test2();
 	test3();
-	test4();
+	test4();*/
 
 
 	delete minibase_globals;
@@ -129,7 +129,7 @@ void BTreeTest::test1() {
 
 
     // test insert()
-    num = 31;
+    num = 100;
     
 struct dummy{
 RID r;
@@ -172,18 +172,19 @@ btf->treeDump(btf->headerpage.rootPageID);
         }
     }
 
-    delete btf;
+   // delete btf;
 
-    btf = new BTreeFile(status, "BTreeIndex");
+    //btf = new BTreeFile(status, "BTreeIndex");
     if(status == OK)
 	cout<<"\n BTreeIndex opened successfully." << endl << endl;
   
     // test scan and delete_current()
     cout << "\n----------- Testing scans -------------" << endl;
-    lokey = 200;
-    hikey = 400;
+    lokey = 20;
+    hikey = 40;
 
     //AllScan
+/*
     scan = btf->new_scan(NULL,NULL);
     test_scan(scan);
     delete scan;   
@@ -196,9 +197,10 @@ btf->treeDump(btf->headerpage.rootPageID);
     delete scan;
 
 
-
+*/
     //MinRangeScan;
     scan = btf->new_scan(&lokey, NULL);
+btf->treeDump(btf->headerpage.rootPageID);
     test_scan(scan);
     delete scan;   
 
