@@ -49,7 +49,7 @@ return DONE;
 	//in case of exact match, only one element in scan
 	if(currRID == rightmostRID) usedUp = true;
 	currRID = rid;
-currentPage = rid.pageNo;
+	currentPage = rid.pageNo;
 	return OK;
     }
   
