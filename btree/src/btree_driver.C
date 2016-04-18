@@ -157,7 +157,7 @@ int key;
 
 //btf->treeDump(btf->headerpage.rootPageID);
     // test delete()
-
+/*
     cout << "\nstart BTreeIndex deletion" << endl << endl;
     int j = 0;
     for (i = 0; i < num; i++) {
@@ -171,7 +171,7 @@ printf("deleting key = %d\n",kill[i/10].key);
 	    }
 
         }
-    }
+    }*/
 btf->treeDump(btf->headerpage.rootPageID);
     delete btf;
 
