@@ -46,7 +46,14 @@ class BTIndexPage : public SortedPage {
 
    Status get_page_no(const void *key, AttrType key_type, PageId & pageNo);
 
-    
+// ------------------ get_insert_page_no -----------------------
+// This function finds the next pageNo to search in a 
+// BTIndexPage. It iterates all entries in an index page
+// and creates leftmost link if necessary and returns the page_no of the
+// child to be searched next.
+    Status get_insert_page_no(const void *key,
+                                AttrType key_type,
+                                PageId & pageNo);
 // ------------------- Iterators ------------------------
 // The two functions get_first and get_next provide an
 // iterator interface to the records on a BTIndexPage.

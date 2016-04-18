@@ -172,7 +172,7 @@ printf("deleting key = %d\n",kill[i/10].key);
 
         }
     }*/
-btf->treeDump(btf->headerpage.rootPageID);
+//btf->treeDump(btf->headerpage.rootPageID);
     delete btf;
 
     btf = new BTreeFile(status, "BTreeIndex");
@@ -204,7 +204,7 @@ btf->treeDump(btf->headerpage.rootPageID);
 //
     test_scan(scan);
     delete scan;   
-
+*/
     
     //ExactMatch
     scan = btf->new_scan(&hikey, &hikey);
@@ -256,7 +256,7 @@ btf->treeDump(btf->headerpage.rootPageID);
     delete scan;
 
     delete btf;
-*/
+
     cout << "\n---------------End of Test 1----------------------\n\n";
 }
 
