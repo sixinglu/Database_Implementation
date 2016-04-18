@@ -28,26 +28,41 @@ Status BTreeFileScan::get_next(RID & rid, void* keyptr)
 {
 
     Status status;
-printf("in get_next\n");
-
+//printf("in get_next\n");
+if(usedUp == true){
+//all traversed
+return DONE;
+}
     if(getFirst==true){
-	rid = currRID;
-	// get the key
+	rid = leftmostRID;
+	// first element
    	 KeyDataEntry recPtr;
    	 int recLen;
         SortedPage* current;
-	status = MINIBASE_BM->pinPage(currentPage, (Page* &)current, 1);
+	status = MINIBASE_BM->pinPage(leftmostPage, (Page* &)current, 1);
     	status = current->getRecord(rid,(char*)&recPtr,recLen);  // return value rid
-    	char* tmpPtr =(char*)&recPtr;
     	Keytype* cur_key = (Keytype*)&recPtr;
     	memcpy(keyptr,cur_key,keysize());   //return value keyptr
 	status = MINIBASE_BM->unpinPage(currentPage, 0, 1);
 	getFirst = false;
+	currRID = rid;
+	//in case of exact match, only one element in scan
+	if(currRID == rightmostRID) usedUp = true;
 	return OK;
     }
   
-    if(currRID==rightmostRID){
-	return DONE;
+    if(currRID==rightmostRID && usedUp == false){
+//last element
+   	 KeyDataEntry recPtr;
+   	 int recLen;
+        SortedPage* current;
+	status = MINIBASE_BM->pinPage(rightmostPage, (Page* &)current, 1);
+    	status = current->getRecord(rid,(char*)&recPtr,recLen);  // return value rid
+    	Keytype* cur_key = (Keytype*)&recPtr;
+    	memcpy(keyptr,cur_key,keysize());   //return value keyptr
+	status = MINIBASE_BM->unpinPage(currentPage, 0, 1);
+	usedUp = true;
+	return OK;
     }
 
 

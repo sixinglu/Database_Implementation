@@ -44,7 +44,7 @@ class BTIndexPage : public SortedPage {
 // described in the textbook, and returns the page_no of the
 // child to be searched next.
 
-   Status get_page_no(const void *key, AttrType key_type, PageId & pageNo);
+   //Status get_page_no(const void *key, AttrType key_type, PageId & pageNo);
 
 // ------------------ get_insert_page_no -----------------------
 // This function finds the next pageNo to search in a 

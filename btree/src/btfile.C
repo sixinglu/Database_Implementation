@@ -112,7 +112,7 @@ Status BTreeFile::destroyFile_Helper(PageId currPageId)
 	}
 
 	SortedPage* currIndex;
-	status = MINIBASE_BM->pinPage( currPageId, (Page* &)currIndex, 1 );
+	status = MINIBASE_BM->pinPage( currPageId, (Page* &)currIndex, 0 );
 
 	// delete what's inside it
 	if(currIndex->empty()!=true){
@@ -171,7 +171,7 @@ Status BTreeFile::insert(const void *key, const RID rid)
 
 	// if it is very beginning, the root is empty
 	SortedPage* rootPage;
-	status = MINIBASE_BM->pinPage( headerpage.rootPageID, (Page* &)rootPage, 1 );
+	status = MINIBASE_BM->pinPage( headerpage.rootPageID, (Page* &)rootPage, 0 );
 	if(rootPage->empty()==true){
 		RID returnRid;
 		status = ((BTLeafPage*)rootPage)->insertRec(key, headerpage.keytype, rid, returnRid);
@@ -221,7 +221,7 @@ Status BTreeFile::Delete(const void *key, const RID rid)
 	// scan to find the record Page 
 	//Search_index(indexPage, leafPage, headerpage.rootPageID, *(Keytype*)key );  // find the delete targets
 	BTLeafPage* deleteLeaf;
-	status = MINIBASE_BM->pinPage( rid.pageNo, (Page* &)deleteLeaf, 1 );
+	status = MINIBASE_BM->pinPage( rid.pageNo, (Page* &)deleteLeaf, 0 );
 	if(status!=OK){
 		status = MINIBASE_BM->unpinPage(rid.pageNo, 1, 1);
 		return DONE;
@@ -240,7 +240,7 @@ Status BTreeFile::Delete(const void *key, const RID rid)
 		/**************** basic delete without redistribution or merging ******************/
 
 		BTLeafPage* deleteLeaf;
-		status = MINIBASE_BM->pinPage( leafPage, (Page* &)deleteLeaf, 1 );
+		status = MINIBASE_BM->pinPage( leafPage, (Page* &)deleteLeaf, 0 );
 
 		if(leafPage!=headerpage.rootPageID){
 
@@ -250,13 +250,13 @@ Status BTreeFile::Delete(const void *key, const RID rid)
 
 			SortedPage *prevPage, *nextPage;
 			if(prev!=INVALID_PAGE){
-				status = MINIBASE_BM->pinPage(prev, (Page* &)prevPage, 1);
+				status = MINIBASE_BM->pinPage(prev, (Page* &)prevPage, 0);
 				prevPage->setNextPage(next);
 				status = MINIBASE_BM->unpinPage(prev, 1, 1); // dirty
 			}
 
 			if(next!=INVALID_PAGE){
-				status = MINIBASE_BM->pinPage(next, (Page* &)nextPage, 1);
+				status = MINIBASE_BM->pinPage(next, (Page* &)nextPage, 0);
 				nextPage->setPrevPage(prev);
 				status = MINIBASE_BM->unpinPage(next, 1, 1); // dirty
 			}
@@ -271,7 +271,7 @@ Status BTreeFile::Delete(const void *key, const RID rid)
 		// delete the index if the pointed leaf is empty
 		if(leafPage!=headerpage.rootPageID && deleteLeaf->empty()==true){
 			BTIndexPage* deleteIndex;
-			status = MINIBASE_BM->pinPage( indexPage, (Page* &)deleteIndex, 1 );
+			status = MINIBASE_BM->pinPage( indexPage, (Page* &)deleteIndex, 0 );
 			RID curRidIndex;
 			printf("delete index page: %d\n",indexPage);
 			status = deleteIndex->deleteKey(key, headerpage.keytype, curRidIndex);
@@ -297,7 +297,7 @@ Status BTreeFile::Delete_helper(PageId currentDel, Keytype &key, const RID rid)
 	Status status = OK;
 
 	SortedPage* deleteTarget;
-	status = MINIBASE_BM->pinPage( currentDel, (Page* &)deleteTarget, 1 );
+	status = MINIBASE_BM->pinPage( currentDel, (Page* &)deleteTarget, 0 );
 	nodetype ndtype = (nodetype)deleteTarget->get_type();
 
 	int recSize =1;
@@ -339,7 +339,7 @@ Status BTreeFile::Delete_helper(PageId currentDel, Keytype &key, const RID rid)
 
 	if(RightSiblingPage!=INVALID_PAGE){
 		SortedPage* rightsib;
-		status = MINIBASE_BM->pinPage(RightSiblingPage, (Page* &)rightsib, 1);
+		status = MINIBASE_BM->pinPage(RightSiblingPage, (Page* &)rightsib, 0);
 		if(rightsib->numberOfRecords()>=d+1){
 			deleteTarget->deleteRecord(rid); // delete before re-distribute
 			status = rightDistibute(deleteTarget, rightsib, parentNode);
@@ -351,7 +351,7 @@ Status BTreeFile::Delete_helper(PageId currentDel, Keytype &key, const RID rid)
 
 	if(LeftSiblingPage!=INVALID_PAGE ){
 		SortedPage* leftsib;
-		status = MINIBASE_BM->pinPage(LeftSiblingPage, (Page* &)leftsib, 1);
+		status = MINIBASE_BM->pinPage(LeftSiblingPage, (Page* &)leftsib, 0);
 		if(leftsib->numberOfRecords()>=d+1){
 			deleteTarget->deleteRecord(rid);  // delete before re-distribute
 			status = leftDistribute(deleteTarget, leftsib, parentNode);
@@ -367,7 +367,7 @@ Status BTreeFile::Delete_helper(PageId currentDel, Keytype &key, const RID rid)
 	if(LeftSiblingPage!=INVALID_PAGE){
 
 		SortedPage* leftsib;
-		status = MINIBASE_BM->pinPage(LeftSiblingPage, (Page* &)leftsib, 1);
+		status = MINIBASE_BM->pinPage(LeftSiblingPage, (Page* &)leftsib, 0);
 
 		if(leftsib->numberOfRecords()<d+1){
 
@@ -382,7 +382,7 @@ Status BTreeFile::Delete_helper(PageId currentDel, Keytype &key, const RID rid)
 	if(RightSiblingPage!=INVALID_PAGE){
 
 		SortedPage* rightsib;
-		status = MINIBASE_BM->pinPage(RightSiblingPage, (Page* &)rightsib, 1);
+		status = MINIBASE_BM->pinPage(RightSiblingPage, (Page* &)rightsib, 0);
 
 		if(rightsib->numberOfRecords()<d+1){
 
@@ -415,7 +415,7 @@ bool BTreeFile::find_sibling(SortedPage* currIndex, Keytype &key, PageId &LeftSi
 		return true;
 	}
 
-	status = MINIBASE_BM->pinPage( parent, (Page* &)parentNode, 1 );  // parent must be INDEX
+	status = MINIBASE_BM->pinPage( parent, (Page* &)parentNode, 0 );  // parent must be INDEX
 
 	// initilize
 	LeftSiblingPage = INVALID_PAGE;
@@ -553,8 +553,8 @@ Status BTreeFile::leftMerge(SortedPage* current, SortedPage* left, BTIndexPage* 
 		PageId next =current->getNextPage();
 
 		SortedPage *prevPage, *nextPage;
-		status = MINIBASE_BM->pinPage(prev, (Page* &)prevPage, 1);
-		status = MINIBASE_BM->pinPage(next, (Page* &)nextPage, 1);
+		status = MINIBASE_BM->pinPage(prev, (Page* &)prevPage, 0);
+		status = MINIBASE_BM->pinPage(next, (Page* &)nextPage, 0);
 		prevPage->setNextPage(next);
 		nextPage->setPrevPage(prev);
 
@@ -623,8 +623,8 @@ Status BTreeFile::rightMerge(SortedPage* current, SortedPage* right, BTIndexPage
 		PageId next =right->getNextPage();
 
 		SortedPage *prevPage, *nextPage;
-		status = MINIBASE_BM->pinPage(prev, (Page* &)prevPage, 1);
-		status = MINIBASE_BM->pinPage(next, (Page* &)nextPage, 1);
+		status = MINIBASE_BM->pinPage(prev, (Page* &)prevPage, 0);
+		status = MINIBASE_BM->pinPage(next, (Page* &)nextPage, 0);
 		prevPage->setNextPage(next);
 		nextPage->setPrevPage(prev);
 
@@ -676,7 +676,7 @@ IndexFileScan *BTreeFile::new_scan(const void *lo_key, const void *hi_key) {
 	}
 
 	BTIndexPage* currIndex;
-	status = MINIBASE_BM->pinPage( currPageId, (Page* &)currIndex, 1 );
+	status = MINIBASE_BM->pinPage( currPageId, (Page* &)currIndex, 0 );
 	nodetype ndtype = (nodetype)currIndex->get_type();
 
 	if(ndtype ==LEAF){  // found the left most
@@ -719,16 +719,16 @@ IndexFileScan *BTreeFile::new_scan(const void *lo_key, const void *hi_key) {
 		PageId lo_pageno = headerpage.rootPageID,hi_pageno = headerpage.rootPageID;
 		SortedPage* lo_page,*hi_page;
 		if(lo_key != NULL)
-			status = currIndex->get_page_no(lo_key,headerpage.keytype,lo_pageno);
+			status = get_leaf_page_no(lo_key,headerpage.keytype,lo_pageno);
 		else{//lo_pageno = leftmost
 ;
 		}
 		if(hi_key != NULL)
-			status = currIndex->get_page_no(hi_key,headerpage.keytype,hi_pageno);
+			status = get_leaf_page_no(hi_key,headerpage.keytype,hi_pageno);
 		else{//hi_pageno = rightmost
 ;
 		}
-		status = MINIBASE_BM->pinPage(lo_pageno, (Page* &)lo_page, 1 );
+		status = MINIBASE_BM->pinPage(lo_pageno, (Page* &)lo_page, 0 );
 		RID curRID,prevRID,resultRID;
 		loopStatus = lo_page->firstRecord(curRID);  // read the first index record
 		scanner->leftmostPage = lo_pageno;
@@ -739,7 +739,7 @@ IndexFileScan *BTreeFile::new_scan(const void *lo_key, const void *hi_key) {
 			int recLen;
 			PageId pageNo;
 			Keytype* cur_key = (Keytype*)&recPtr;
-			status = hi_page->getRecord(curRID,(char*)&recPtr,recLen);   // read the next index record
+			status = lo_page->getRecord(curRID,(char*)&recPtr,recLen);   // read the next index record
 
 			resultRID = *(RID*)&tmpPtr[recLen-sizeof(RID)];
 
@@ -754,8 +754,8 @@ IndexFileScan *BTreeFile::new_scan(const void *lo_key, const void *hi_key) {
 			prevRID = curRID;
 			loopStatus = lo_page->nextRecord(prevRID,curRID);
 		}
-		MINIBASE_BM->unpinPage(lo_pageno,1,1);
-		status = MINIBASE_BM->pinPage(hi_pageno, (Page* &)hi_page, 1 );
+		MINIBASE_BM->unpinPage(lo_pageno,0,0);
+		status = MINIBASE_BM->pinPage(hi_pageno, (Page* &)hi_page, 0 );
 		loopStatus = hi_page->firstRecord(curRID);  // read the first index record
 		scanner->rightmostPage = hi_pageno;
 		while(loopStatus == OK){
@@ -810,7 +810,7 @@ Status BTreeFile::Search_index(PageId& indexPage, PageId& leafPage, PageId currP
 
 	// pin the page out
 	SortedPage* currIndex;
-	status = MINIBASE_BM->pinPage( currPage, (Page* &)currIndex, 1 );
+	status = MINIBASE_BM->pinPage( currPage, (Page* &)currIndex, 0 );
 
 	PageId recordpageId =INVALID_PAGE;
 	PageId child =INVALID_PAGE;
@@ -981,7 +981,7 @@ Status BTreeFile::Search_parent(const PageId targetchild, PageId currPage, Keyty
 
 	// pin the page out
 	SortedPage* currIndex;  // last leaf do not need to go deeper, so here only index page
-	status = MINIBASE_BM->pinPage( currPage, (Page* &)currIndex, 1 );  // should emptyPage == 1?
+	status = MINIBASE_BM->pinPage( currPage, (Page* &)currIndex, 0 );  // should emptyPage == 1?
 	nodetype ndtype = (nodetype)currIndex->get_type();  // be careful to match
 
 	if(ndtype==INDEX){  // search this page, find the next child to search
@@ -1318,7 +1318,7 @@ Status BTreeFile::Split(PageId splitTarget, Keytype &insertkey, Datatype insertD
 		SortedPage *nextPage;
 		status = MINIBASE_BM->pinPage(next, (Page* &)nextPage, 1);
 		nextPage->setPrevPage(rightchild);
-		status = MINIBASE_BM->unpinPage(next, 0, 1);
+		status = MINIBASE_BM->unpinPage(next, 1, 1);
 
 		newpage->setPrevPage(splitTarget);
 		leftchild->setPrevPage(rightchild);
@@ -1349,20 +1349,10 @@ Status BTreeFile::Split(PageId splitTarget, Keytype &insertkey, Datatype insertD
 
 		// if it is the former half
 		if (recordCnt > halfnum){
-			//printf("recCnt: %d\n", recordCnt);
-			// put this record into leftchild, cannot call sortpage insert directly, we need sorted insert
 
-			//printf("insert %d\n",prevRID.slotNo);
-			//printf("delete %d\n",prevRID.slotNo);
 
 			// insert
 			RID newRecord;
-			/*if(ndtype==LEAF){
-			  status = ((BTLeafPage*)newpage)->insertRec(&targetkeyin, headerpage.keytype, targetdatain.rid, newRecord);
-			  }
-			  else if(ndtype==INDEX){
-			  status = ((BTIndexPage*)newpage)->insertKey(&targetkeyin, headerpage.keytype, targetdatain.pageNo, newRecord);
-			  }*/
 			status = newpage->insertRecord (headerpage.keytype,(char*)&recPtr,recLen, newRecord);
 
 			// move on before delete
@@ -1371,7 +1361,7 @@ Status BTreeFile::Split(PageId splitTarget, Keytype &insertkey, Datatype insertD
 
 			// delete this record from rightchild directly, do not need sorts
 			status = leftchild->deleteRecord(prevRID);
-			//printf("stopsign %d\n",stopsign);
+
 			if(stopsign!=OK){
 				break;
 			}
@@ -1435,11 +1425,11 @@ Status BTreeFile::Split(PageId splitTarget, Keytype &insertkey, Datatype insertD
 
 	// decide who is the upkey
 	upkey = rightkey.key;
-	leftchild->slotPrint(ndtype);
-	newpage->slotPrint(ndtype);
+	//leftchild->slotPrint(ndtype);
+	//newpage->slotPrint(ndtype);
 	// upin the split page
-	status = MINIBASE_BM->unpinPage(splitTarget, 1, 1); // dirty
-	status = MINIBASE_BM->unpinPage(rightchild, 1, 1);  // dirty
+	status = MINIBASE_BM->unpinPage(splitTarget, 1, 0); // dirty
+	status = MINIBASE_BM->unpinPage(rightchild, 1, 0);  // dirty
 
 	return OK;
 }
@@ -1532,5 +1522,52 @@ void BTreeFile::treeDump(PageId currPage){
 //
 //}
 
+Status BTreeFile::get_leaf_page_no(const void *key,
+		AttrType key_type,
+		PageId & pageNo){
+	Status status = OK;
+	// if this page is deleted
 
+	// read the key inside index record one by one
+	RID currRID, prevRID;
+	BTIndexPage* curPage;
+	//	int find_flag = 0;
+PageId tmpPNO = pageNo;
+//treeDump(pageNo);
+	status = MINIBASE_BM->pinPage( tmpPNO, (Page* &)curPage, 0 );
+	cout<<pageNo<<endl;
+	if(curPage->get_type() == LEAF) return OK;
+	PageId prev_pointTo = curPage->getLeftLink();
+	status = curPage->firstRecord(currRID);               // read the first index RID
+PageId cur_pageNo = -1;
+	do{
+		KeyDataEntry recPtr;
+		char* tmpPtr =(char*)&recPtr;
+		int recLen;
+		Keytype* cur_key = (Keytype*)&recPtr;
+		status = curPage->getRecord(currRID,(char*)&recPtr,recLen);   // read the next index record
+
+		cur_pageNo = *(PageId*)&tmpPtr[recLen-sizeof(PageId)];
+
+
+		// compare the key
+		int compareResult = keyCompare(key,cur_key,key_type);
+
+		if(compareResult<0){  // the insert key is smaller
+			//find_flag = 1;
+			cur_pageNo = prev_pointTo;
+			break;
+
+		}
+		// else the insert key is larger, move on to next key record
+		prev_pointTo = cur_pageNo;
+		prevRID = currRID;
+
+	}
+	while(curPage->nextRecord(prevRID,currRID)==OK);
+	//   if(find_flag != 1)
+	//   pageNo = prev_pointTo;  // key larger than all index keys, choose the last one
+pageNo = cur_pageNo;
+	return get_leaf_page_no(key, key_type, pageNo);
+}
 

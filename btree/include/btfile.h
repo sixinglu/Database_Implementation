@@ -109,7 +109,9 @@ class BTreeFile: public IndexFile
     // recursively search, return leaf PageID
     Status Search_record(PageId& result, PageId currPage, Keytype &key);
     
-    
+    Status get_leaf_page_no(const void *key,
+		AttrType key_type,
+		PageId & pageNo);
     /******** Destory file *********/
     Status destroyFile_Helper(PageId currPageId);
     

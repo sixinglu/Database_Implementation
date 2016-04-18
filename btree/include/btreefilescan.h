@@ -27,7 +27,7 @@ public:
 
     // destructor
     ~BTreeFileScan();
-//private:
+private:
     
     PageId leftmostPage;
     PageId rightmostPage;
@@ -41,6 +41,7 @@ public:
     int Keysize;
 
     bool getFirst;
+bool usedUp;
 };
 
 #endif
