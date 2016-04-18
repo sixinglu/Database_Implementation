@@ -156,7 +156,7 @@ int key;
     }
 
     // test delete()
-
+/*
     cout << "\nstart BTreeIndex deletion" << endl << endl;
     int j = 0;
     for (i = 0; i < num; i++) {
@@ -171,6 +171,7 @@ int key;
         }
     }
 btf->treeDump(btf->headerpage.rootPageID);
+*/
     delete btf;
 
     btf = new BTreeFile(status, "BTreeIndex");
