@@ -20,14 +20,15 @@
 // enum btErrCodes  {...}
 
 // header page do not contain key or RID informaion, only used for grad the first index or leaf
-class HeaderPage{
+class HeaderPage
+{
 public:
     //PageId headerpageID;
     PageId rootPageID;      // compare the rootPageId to tell if the page is root
     AttrType keytype;
     nodetype PageType;
     int keysize;
-    char *filename;
+    char filename[20];
 };
 
 class BTreeFile: public IndexFile
@@ -86,8 +87,8 @@ class BTreeFile: public IndexFile
     Status Search_Insert_Helper(PageId currPage, Keytype insertkey, Datatype insertData, PageId &rightchild, Keytype &upkey);
     
     /******* Delete *****/
-    Status Search_index(PageId& indexPage, PageId& leafPage, PageId currPage, Keytype &key );
-    bool get_matchedkey_page(SortedPage* currIndex, Keytype &key, PageId & recordpageId, PageId& child);
+    Status Search_index(PageId& indexPage, PageId& leafPage, PageId currPage, Keytype key );
+    bool get_matchedkey_page(SortedPage* currIndex, Keytype key, PageId & recordpageId, PageId& child);
     
     // delete helper to recursively call, for the merge
     Status Delete_helper(PageId currentDel, Keytype &key, const RID rid);

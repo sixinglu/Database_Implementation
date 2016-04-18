@@ -27,7 +27,7 @@ public:
 
     // destructor
     ~BTreeFileScan();
-private:
+//private:
     
     PageId leftmostPage;
     PageId rightmostPage;
