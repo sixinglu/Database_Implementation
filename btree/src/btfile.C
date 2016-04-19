@@ -682,7 +682,9 @@ IndexFileScan *BTreeFile::new_scan(const void *lo_key, const void *hi_key) {
 	nodetype ndtype = (nodetype)currIndex->get_type();
 
 	if(ndtype ==LEAF){  // found the left most
+//a question, what if this leaf has one rec only? ignored for now
 		RID curRID,prevRID,resultRID;
+prevRID.pageNo = -1;
 		loopStatus = currIndex->firstRecord(curRID);  // read the first index record
 		scanner->leftmostPage = currPageId;
 		scanner->rightmostPage = currPageId;
@@ -703,22 +705,26 @@ IndexFileScan *BTreeFile::new_scan(const void *lo_key, const void *hi_key) {
 			if(hi_key != NULL)
 				compareResult_h = keyCompare((void*)hi_key,(void*)cur_key,headerpage.keytype);
 			if(compareResult_l <= 0 && leftFlag == 0){
-				//find first key <= lokey
-				//if all keys > lokey, never in this block
+				//find first key >= lokey, set leftFlage to avoid thrashing
+				//if all keys < lokey, never in this block
 				scanner->leftmostRID = curRID;
 				leftFlag = 1;
 			}
 			if(compareResult_l < 0  && rightFlag == 0){
 				//find last key <= highkey
-`				//if all key > high key, never in this loop
+				//if all key > high key, never in this loop
+if(prevRID.pageNo == -1)
+	scanner->usedUp = true;
 				scanner->rightmostRID = prevRID;
 				rightFlag = 1;
 			}
 			prevRID = curRID;
 			loopStatus = currIndex->nextRecord(prevRID,curRID);
 		}
-		if(rightFlag == 0)
-			scanner->rightmostRID = prevRID;
+		if(leftFlag == 0)
+			scanner->usedUp = true;
+if(rightFlag == 0)
+				scanner->rightmostRID = prevRID;
 		MINIBASE_BM->unpinPage(currPageId,1,1);
 	}
 	else if(ndtype == INDEX){
@@ -760,8 +766,10 @@ IndexFileScan *BTreeFile::new_scan(const void *lo_key, const void *hi_key) {
 				status = MINIBASE_BM->unpinPage( traverse_pno, 0, 0 );
 			}
 		}
+//lokey case
 		status = MINIBASE_BM->pinPage(lo_pageno, (Page* &)lo_page, 0 );
 		RID curRID,prevRID,resultRID;
+		prevRID.pageNo = -1;
 		loopStatus = lo_page->firstRecord(curRID);  // read the first index record
 		scanner->leftmostPage = lo_pageno;
 		int leftFlag = 0, rightFlag = 0;
@@ -786,10 +794,15 @@ IndexFileScan *BTreeFile::new_scan(const void *lo_key, const void *hi_key) {
 			prevRID = curRID;
 			loopStatus = lo_page->nextRecord(prevRID,curRID);
 		}
+if(leftFlag == 0)
+scanner->usedUp = true;
 		MINIBASE_BM->unpinPage(lo_pageno,0,0);
+
+//hikey case
 		status = MINIBASE_BM->pinPage(hi_pageno, (Page* &)hi_page, 0 );
 		loopStatus = hi_page->firstRecord(curRID);  // read the first index record
 		scanner->rightmostPage = hi_pageno;
+		prevRID.pageNo = -1;
 		while(loopStatus == OK){
 			KeyDataEntry recPtr;
 			char* tmpPtr =(char*)&recPtr;
@@ -805,6 +818,8 @@ IndexFileScan *BTreeFile::new_scan(const void *lo_key, const void *hi_key) {
 				compareResult_r = keyCompare((void*)hi_key,(void*)cur_key,headerpage.keytype);
 
 			if(compareResult_r < 0  && rightFlag == 0){
+				if(prevRID.pageNo == -1)
+					scanner->usedUp = true;
 				scanner->rightmostRID = prevRID;
 				rightFlag = 1;
 			}
@@ -812,7 +827,7 @@ IndexFileScan *BTreeFile::new_scan(const void *lo_key, const void *hi_key) {
 			loopStatus = hi_page->nextRecord(prevRID,curRID);
 		}
 		if(rightFlag == 0)
-			scanner->rightmostRID = prevRID;
+				scanner->rightmostRID = prevRID;
 		MINIBASE_BM->unpinPage(hi_pageno,1,1);
 		MINIBASE_BM->unpinPage(currPageId,1,1);
 

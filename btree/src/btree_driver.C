@@ -129,7 +129,7 @@ void BTreeTest::test1() {
 
 
     // test insert()
-    num = 100;
+    num = 2000;
     
 struct dummy{
 RID r;
@@ -170,7 +170,6 @@ int key;
 
         }
     }
-btf->treeDump(btf->headerpage.rootPageID);
 
     delete btf;
 
@@ -180,8 +179,8 @@ btf->treeDump(btf->headerpage.rootPageID);
   
     // test scan and delete_current()
     cout << "\n----------- Testing scans -------------" << endl;
-    lokey = 20;
-    hikey = 40;
+    lokey = 200;
+    hikey = 400;
 
     //AllScan
     scan = btf->new_scan(NULL,NULL);
