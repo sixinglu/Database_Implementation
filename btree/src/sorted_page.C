@@ -42,16 +42,16 @@ void SortedPage::slotPrint(nodetype ndtype){
 			if(ndtype == INDEX) {
 				printf("left link %d\n", this->getPrevPage());
 				dataPtr = &data[slot[i].offset + slot[i].length -sizeof(PageId)];
-				printf("slot %d has offset %d, has int key %d, char key %s, data pageno %d\n",i,\
+				printf("slot %d has offset %d, has int key %d, char key %s\n, data pageno %d\n",i,\
 						slot[i].offset,cur_key->intkey,cur_key->charkey,\
-						*dataPtr
+						*(int*)(dataPtr)
 				      );
 			}
 			else {dataPtr = &data[slot[i].offset + slot[i].length -sizeof(RID)];
 				//get_key_data(&cur_key, &targetdata, (KeyDataEntry*)&data[slot[i].offset], slot[i].length, ndtype); 
-				printf("slot %d has offset %d, has int key %d, char key %s, rid pageno %d slotno %d\n",i,\
+				printf("slot %d has offset %d, has int key %d, char key %s\n, rid pageno %d slotno %d\n",i,\
 						slot[i].offset,cur_key->intkey,cur_key->charkey,\
-						*dataPtr,dataPtr[4]
+						*(int*)(dataPtr),*(int*)&dataPtr[4]
 				      );
 
 			}
@@ -109,6 +109,9 @@ Status SortedPage::insertRecord (AttrType key_type,
 			int tmpOffset = this->slot[i].offset;
 			this->slot[i].offset = this->slot[slotTail].offset;
 			this->slot[slotTail].offset = tmpOffset;
+			int tmpLength = this->slot[i].length;
+			this->slot[i].length = this->slot[slotTail].length;
+			this->slot[slotTail].length = tmpLength;
 		}
 	}
 	//slotPrint();

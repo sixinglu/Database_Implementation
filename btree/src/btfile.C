@@ -171,7 +171,7 @@ Status BTreeFile::destroyFile_Helper(PageId currPageId)
 		    }while(1);
 		    status = currIndex->deleteRecord(prevRID); // delete last records
 		}
-
+((BTIndexPage*)currIndex)->setLeftLink(INVALID_PAGE);
 	// unpin and deallocate the current page
 	status = MINIBASE_BM->unpinPage(currPageId, 1, 1);
 	status = MINIBASE_DB->deallocate_page(currPageId);
@@ -692,6 +692,7 @@ IndexFileScan *BTreeFile::new_scan(const void *lo_key, const void *hi_key) {
 	if(lo_key != NULL && hi_key != NULL)
 		compareResult_input = keyCompare((void*)lo_key,(void*)hi_key,headerpage.keytype);
 	if(compareResult_input > 0){
+
 		scanner->usedUp = true;
 	}
 
@@ -1345,7 +1346,7 @@ Status BTreeFile::Search_Insert_Helper(PageId currPage, Keytype insertkey, Datat
 			}
 		}
 	}
-
+//treeDump(headerpage.rootPageID);
 	status = MINIBASE_BM->unpinPage(currPage, 1, 1);
 	return status;
 

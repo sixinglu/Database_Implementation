@@ -38,8 +38,8 @@ Status BTreeTest::runTests(){
 
 	//test1();
 	//test2();
-	test3();
-	//test4();
+	//test3();
+	test4();
 
 
 	delete minibase_globals;
@@ -396,7 +396,7 @@ void BTreeTest::test3() {
     while(!keysamples.eof()) {
 		rid.pageNo = (int)(key[0]+key[1]+key[2]);
 		rid.slotNo = rid.pageNo;
-//printf("inserting %dth value %s\n",i,key);
+printf("inserting %dth value %s\n",i,key);
         if (btf->insert(key, rid) != OK) {
             minibase_errors.show_errors();
         }
@@ -408,7 +408,7 @@ void BTreeTest::test3() {
     }
     cout << "\nNumber of records inserted is " << i << endl;
     cout << "\n--------------End of insert----------------" << endl;
-
+//btf->treeDump(btf->headerpage.rootPageID);
     // test delete()
     cout << "\n------Start to delete some records----------" << endl;
 
@@ -422,6 +422,7 @@ void BTreeTest::test3() {
 	cout << "\nSuccessfully deleted record with key = " << lokey << endl;
     cout << "\n---------------End of delete----------------" << endl;
 */
+
     delete btf;
     btf = new BTreeFile(status, "BTreeIndex");
   
@@ -530,7 +531,7 @@ void BTreeTest::test3() {
 	cout << " Failed as expected: no records scanned " << endl;
 
 	// hikey < smallest key
-	strcpy(lokey, "aaa");
+	strcpy(lokey, "bbb");
 	strcpy(hikey, "aaaaa");
 	scan = btf->new_scan(lokey, hikey);
 	cout << "\n----Start MinMaxRangeScan with lokey = " << lokey ;
