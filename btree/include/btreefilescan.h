@@ -37,10 +37,18 @@ private:
     
     PageId currentPage;
     RID currRID;
+
+// for delete current
+    PageId prevPage;
+    RID prevRID; 
+    PageId temp_leftmostPage;
+    RID temp_leftmostRID;
     
     int Keysize;
 
     bool getFirst;
+    bool delFirst;
+
 bool usedUp;
 };
 
