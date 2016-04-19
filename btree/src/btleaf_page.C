@@ -80,28 +80,26 @@ Status BTLeafPage::get_data_rid(void *key,
     }
     
     // read the key inside leaf record one by one
-    RID currRID, prevRID;
+    RID currRID, prevRID, data;
     status = this->firstRecord(currRID);               // read the first index RID
     do{
-        KeyDataEntry recPtr;
-        int recLen;
-        
-        status = this->getRecord(currRID,(char*)&recPtr,recLen);   // read the next index record
-        
-        // read the key from entry
-        Keytype *targetkey;  // the key in the tree
-        Datatype targetdata;
-        get_key_data(&targetkey, &targetdata, &recPtr, recLen, INDEX); // must be index
+		KeyDataEntry recPtr;
+		char* tmpPtr =(char*)&recPtr;
+		int recLen;
+		Keytype* cur_key = (Keytype*)&recPtr;
+		status = this->getRecord(currRID,(char*)&recPtr,recLen);   // read the next index record
+
+		data = *(RID*)&tmpPtr[recLen-sizeof(RID)];
         
         // compare the key
-        int compareResult = keyCompare(key,targetkey,key_type);
+        int compareResult = keyCompare(key,cur_key,key_type);
 //        if(compareResult==0){  // the key already there
 //            return DONE;
 //        }
-        if(compareResult<0){  // the insert key is smaller
+        if(compareResult==0){  // the insert key is smaller
             
             // this record point to the page is the next level search page
-           dataRid = targetdata.rid;
+           dataRid = currRID;
             return OK;
             
         }

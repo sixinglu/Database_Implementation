@@ -173,7 +173,7 @@ printf("%d th want to delete pno %d, sno%d. key %d\n",i/10,kill[(i/10)].r.pageNo
 
         }
     }
-
+btf->treeDump(btf->headerpage.rootPageID);
     delete btf;
 
     btf = new BTreeFile(status, "BTreeIndex");
@@ -182,8 +182,8 @@ printf("%d th want to delete pno %d, sno%d. key %d\n",i/10,kill[(i/10)].r.pageNo
   
     // test scan and delete_current()
     cout << "\n----------- Testing scans -------------" << endl;
-    lokey = 200;
-    hikey = 400;
+    lokey = 20;
+    hikey = 40;
 
     //AllScan
     scan = btf->new_scan(NULL,NULL);

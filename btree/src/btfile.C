@@ -222,13 +222,13 @@ Keytype key_value = *(Keytype*)key;
 status = get_leaf_page_no((void*)&key_value,headerpage.keytype,leafPage);
 	status = MINIBASE_BM->pinPage( leafPage, (Page* &)deleteLeaf, 0 );
 	if(status!=OK){
-		status = MINIBASE_BM->unpinPage(rid.pageNo, 1, 1);
+		status = MINIBASE_BM->unpinPage(leafPage, 1, 1);
 		return DONE;
 	}
-
-
-	deleteLeaf->deleteRecord(rid);
-	status = MINIBASE_BM->unpinPage(rid.pageNo, 1, 1); // dirty
+RID dataRid;
+deleteLeaf->get_data_rid((void*)key,headerpage.keytype,dataRid);
+	deleteLeaf->deleteRecord(dataRid);
+	status = MINIBASE_BM->unpinPage(leafPage, 1, 1); // dirty
 	return OK;
 
 	if(leafPage==INVALID_PAGE){
