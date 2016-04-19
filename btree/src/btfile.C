@@ -119,46 +119,63 @@ Status BTreeFile::destroyFile_Helper(PageId currPageId)
 
 		// traverse records in this page
 		RID currRID, prevRID;
-		prevRID.pageNo = INVALID_PAGE;
 		status = currIndex->firstRecord(currRID);               // read the first index RID
-		do{
-			// delete record
-			if(prevRID.pageNo != INVALID_PAGE){
-				status = currIndex->deleteRecord(prevRID);
-			}
+		nodetype ndtype = (nodetype)currIndex->get_type();
+		PageId preLink = INVALID_PAGE;
+		if(ndtype==LEAF){
+		
+		   do{
+			prevRID = currRID;
+			status = currIndex->nextRecord(prevRID,currRID); // update before delete
+			if(status != OK){
+			    break;
+ 			}
+		        status = currIndex->deleteRecord(prevRID); // delete record
 
-			char *recPtr;
-			int recLen;
-
-			status = currIndex->getRecord(currRID,recPtr,recLen);   // read the first index record
-			nodetype ndtype = (nodetype)currIndex->get_type();
-
-			// read the key from entry
-			void *targetkey;  // the key in the tree
-			Datatype *targetdata;
-
-			if(ndtype==INDEX){  // index node
-				get_key_data(targetkey, targetdata, (KeyDataEntry *)recPtr, recLen, INDEX);
-				destroyFile_Helper(targetdata->pageNo); // recursively call delete_helper
-			}
-			else{ // leaf node
-				get_key_data(targetkey, targetdata, (KeyDataEntry *)recPtr, recLen, LEAF);
-			}
+		     }while(1);
+		     status = currIndex->deleteRecord(prevRID); // delete last records
+		}
+		else  // INDEX
+		{
+		    do{
+			PageId pageNo;
 
 			prevRID = currRID;
+			status = currIndex->nextRecord(prevRID,currRID); // update before delete
+			if(status != OK){
+			    break;
+ 			}
 
+			  
+
+			if(preLink==INVALID_PAGE){
+				pageNo = ((BTIndexPage*)currIndex)->getLeftLink();
+				preLink = pageNo;
+			}
+			else{
+
+				// read the key from entry
+				KeyDataEntry recPtr;
+				char* tmpPtr =(char*)&recPtr;
+				int recLen;
+				Keytype* cur_key = (Keytype*)&recPtr;
+				status = currIndex->getRecord(currRID,(char*)&recPtr,recLen);  
+
+				pageNo = *(PageId*)&tmpPtr[recLen-sizeof(PageId)];
+			}
+
+			destroyFile_Helper(pageNo); // recursively call delete_helper
+		     
+			status = currIndex->deleteRecord(prevRID); // delete record
+
+		    }while(1);
+		    status = currIndex->deleteRecord(prevRID); // delete last records
 		}
-		while(currIndex->nextRecord(prevRID,currRID)==OK);
-		// delete the last one
-		if(prevRID.pageNo != INVALID_PAGE){
-			status = currIndex->deleteRecord(prevRID);
-		}
-	}
 
 	// unpin and deallocate the current page
 	status = MINIBASE_BM->unpinPage(currPageId, 1, 1);
 	status = MINIBASE_DB->deallocate_page(currPageId);
-
+	}
 	return status;
 }
 
@@ -222,13 +239,13 @@ Keytype key_value = *(Keytype*)key;
 status = get_leaf_page_no((void*)&key_value,headerpage.keytype,leafPage);
 	status = MINIBASE_BM->pinPage( leafPage, (Page* &)deleteLeaf, 0 );
 	if(status!=OK){
-		status = MINIBASE_BM->unpinPage(leafPage, 1, 1);
+		status = MINIBASE_BM->unpinPage(rid.pageNo, 1, 1);
 		return DONE;
 	}
-RID dataRid;
-deleteLeaf->get_data_rid((void*)key,headerpage.keytype,dataRid);
-	deleteLeaf->deleteRecord(dataRid);
-	status = MINIBASE_BM->unpinPage(leafPage, 1, 1); // dirty
+
+
+	deleteLeaf->deleteRecord(rid);
+	status = MINIBASE_BM->unpinPage(rid.pageNo, 1, 1); // dirty
 	return OK;
 
 	if(leafPage==INVALID_PAGE){
