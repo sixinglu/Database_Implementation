@@ -674,7 +674,7 @@ IndexFileScan *BTreeFile::new_scan(const void *lo_key, const void *hi_key) {
 	if(lo_key != NULL && hi_key != NULL)
 		compareResult_input = keyCompare((void*)lo_key,(void*)hi_key,headerpage.keytype);
 	if(compareResult_input > 0){
-		printf("bad input\n");
+		scanner->usedUp = true;
 	}
 
 	BTIndexPage* currIndex;
@@ -703,10 +703,14 @@ IndexFileScan *BTreeFile::new_scan(const void *lo_key, const void *hi_key) {
 			if(hi_key != NULL)
 				compareResult_h = keyCompare((void*)hi_key,(void*)cur_key,headerpage.keytype);
 			if(compareResult_l <= 0 && leftFlag == 0){
+				//find first key <= lokey
+				//if all keys > lokey, never in this block
 				scanner->leftmostRID = curRID;
 				leftFlag = 1;
 			}
 			if(compareResult_l < 0  && rightFlag == 0){
+				//find last key <= highkey
+`				//if all key > high key, never in this loop
 				scanner->rightmostRID = prevRID;
 				rightFlag = 1;
 			}
