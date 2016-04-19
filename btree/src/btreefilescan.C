@@ -88,7 +88,10 @@ Status BTreeFileScan::get_next(RID & rid, void* keyptr)
 			if(nextPageId == INVALID_PAGE){  // reach the end
 				return DONE;
 			}
+			status = MINIBASE_BM->pinPage(nextPageId, (Page* &)next, 1);
+			next->firstRecord(rid);
 			ifEmpty = next->empty();
+			status = MINIBASE_BM->unpinPage(nextPageId, 0, 1);
 		}
 
 		status = MINIBASE_BM->pinPage(nextPageId, (Page* &)next, 1);
@@ -113,7 +116,7 @@ Status BTreeFileScan::get_next(RID & rid, void* keyptr)
 	currentPage = nextPageId;
 	currRID = rid;
 
-	//printf("nextRIDslot: %d\n", rid.slotNo);
+	printf("nextRIDslot: %d\n", rid.slotNo);
 
 	return OK;
 }
