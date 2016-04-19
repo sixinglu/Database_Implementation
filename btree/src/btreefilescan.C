@@ -33,29 +33,24 @@ Status BTreeFileScan::get_next(RID & rid, void* keyptr)
 		//all traversed
 		return DONE;
 	}
-
-Keytype* first_cur_key;
 	if(getFirst==true){
-
 		rid = leftmostRID;
-
 		// first element
 		KeyDataEntry recPtr;
 		int recLen;
 		SortedPage* current;
 		status = MINIBASE_BM->pinPage(leftmostPage, (Page* &)current, 1);
 		status = current->getRecord(rid,(char*)&recPtr,recLen);  // return value rid
-		first_cur_key = (Keytype*)&recPtr;
-//		memcpy(keyptr,first_cur_key,keysize());   //return value keyptr
+		Keytype* cur_key = (Keytype*)&recPtr;
+		memcpy(keyptr,cur_key,keysize());   //return value keyptr
 		status = MINIBASE_BM->unpinPage(currentPage, 0, 1);
-		//getFirst = false;
-delFirst = true;
+		getFirst = false;
+
 		//in case of exact match, only one element in scan
 		if(currRID == rightmostRID) usedUp = true;
 		currRID = rid;
 		currentPage = rid.pageNo;
-		//return OK;
-		
+		return OK;
 	}
 
 	if(currRID==rightmostRID && usedUp == false){
@@ -115,75 +110,27 @@ delFirst = true;
 	}
 
 	// update
-	prevPage = currentPage;
-	prevRID = currRID;
-
-if(getFirst == true){
-
-	temp_leftmostPage = nextPageId;
-	temp_leftmostRID = rid;
-
-	rid = leftmostRID;  // re-flush rid
-	memcpy(keyptr,first_cur_key,keysize());   //re-flush value keyptr	
-	getFirst = false;
-}
-else{
 	currentPage = nextPageId;
 	currRID = rid;
-}
 
-	printf("nextRIDslot: %d\n", rid.slotNo);
+	//printf("nextRIDslot: %d\n", rid.slotNo);
 
 	return OK;
 }
 
 Status BTreeFileScan::delete_current()
 {
-
-if(currentPage==INVALID_PAGE){
-return OK;  // we cannot return DONE, end should be controled by get_next_record
-}
+	// do I need to delete the key as well?
 
 	Status status;
 
-PageId temp_pageId = currentPage;
-RID temp_RID = currRID;
+	SortedPage *current;
+	status = MINIBASE_BM->pinPage(currentPage, (Page* &)current, 1);
 
-	
-printf("prevRID slot is: %d, prevPage is: %d\n",prevRID.slotNo,  prevPage);
-
-
-if(delFirst==true){ // reset the current
-
-leftmostPage = temp_leftmostPage;
-leftmostRID = temp_leftmostRID;
-
-printf("leftmostPage: %d, leftmostRID_slot: %d\n",leftmostPage, leftmostRID.slotNo);
-
-RID uselessrid;
-char* temp = new char[this->keysize()];
-this->get_next(uselessrid, temp);
-delFirst = false;
-getFirst= true;
-
-}
-else{
-	currRID = prevRID; // go back
-	currentPage = prevPage;
-}
-
-// deletion
-	SortedPage *deltarget;
-	status = MINIBASE_BM->pinPage(temp_pageId, (Page* &)deltarget, 1);
-
-if(deltarget->empty()==true){
-	return OK;  // we cannot return DONE, end should be controled by get_next_record
-}
-
-	deltarget->deleteRecord(temp_RID);
-
-	status = MINIBASE_BM->unpinPage(currentPage, 1, 0);		
-
+	current->deleteRecord(currRID);
+	if(currRID == rightmostRID)
+		usedUp = true;
+	status = MINIBASE_BM->unpinPage(currentPage, 1, 0);
 
 	return status;
 }

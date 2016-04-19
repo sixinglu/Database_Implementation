@@ -215,17 +215,18 @@ Status BTreeFile::insert(const void *key, const RID rid)
 Status BTreeFile::Delete(const void *key, const RID rid)
 {
 	Status status = OK;
-	PageId indexPage=INVALID_PAGE;
-	PageId leafPage=INVALID_PAGE;
-	printf("del key: %d, rid: %d\n", *(int*)key, rid.pageNo);
-	// scan to find the record Page 
-	//Search_index(indexPage, leafPage, headerpage.rootPageID, *(Keytype*)key );  // find the delete targets
+	PageId leafPage=headerpage.rootPageID;
 	BTLeafPage* deleteLeaf;
-	status = MINIBASE_BM->pinPage( rid.pageNo, (Page* &)deleteLeaf, 0 );
+//printf("want to delete %d\n", *(int*)key);
+Keytype key_value = *(Keytype*)key;
+status = get_leaf_page_no((void*)&key_value,headerpage.keytype,leafPage);
+	status = MINIBASE_BM->pinPage( leafPage, (Page* &)deleteLeaf, 0 );
 	if(status!=OK){
 		status = MINIBASE_BM->unpinPage(rid.pageNo, 1, 1);
 		return DONE;
 	}
+
+
 	deleteLeaf->deleteRecord(rid);
 	status = MINIBASE_BM->unpinPage(rid.pageNo, 1, 1); // dirty
 	return OK;
@@ -234,11 +235,11 @@ Status BTreeFile::Delete(const void *key, const RID rid)
 		cout<<"cannot find delete key!"<<endl;
 		return DONE;
 	}
-
+/* forget about advanced delete for now
 	if( ADVANCED_DELTE==0 ){  // if it is the root, just simply delete
-
+*/
 		/**************** basic delete without redistribution or merging ******************/
-
+/*
 		BTLeafPage* deleteLeaf;
 		status = MINIBASE_BM->pinPage( leafPage, (Page* &)deleteLeaf, 0 );
 
@@ -282,11 +283,12 @@ Status BTreeFile::Delete(const void *key, const RID rid)
 		status = MINIBASE_BM->unpinPage(leafPage, 1, 1);
 
 	}
+*/
 	/**************** advanced delete with redistribution or merging ******************/
-	else{
+/*	else{
 		Delete_helper(leafPage, *(Keytype*)key, rid);
 	}
-
+*/
 	return OK;
 }
 
