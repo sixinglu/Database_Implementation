@@ -36,9 +36,9 @@ Status BTreeTest::runTests(){
 	}
 
 
-	//test1();
-	//test2();
-	//test3();
+	test1();
+	test2();
+	test3();
 	test4();
 
 
@@ -143,11 +143,9 @@ int key;
         rid.pageNo = i; rid.slotNo = i+1;
 	key = num - i; 
 	if (i % 10 == 0) {
-
 	  kill[(i/10)].r.pageNo = rid.pageNo;
 	  kill[(i/10)].r.slotNo = rid.slotNo;
 	  kill[i/10].key = key;
-//printf("%d th want to delete pno %d, sno%d. key %d\n",i/10,kill[(i/10)].r.pageNo,kill[(i/10)].r.slotNo,kill[i/10].key );
         }
 
         if (btf->insert(&key, rid) != OK) {
@@ -164,7 +162,6 @@ int key;
     for (i = 0; i < num; i++) {
         if (i % 10 == 0) {
 	    j++;
-//printf("%d th want to delete pno %d, sno%d. key %d\n",i/10,kill[(i/10)].r.pageNo,kill[(i/10)].r.slotNo,kill[i/10].key );
 	    if (btf->Delete(&kill[i/10].key, kill[(i/10)].r) != OK) {
 	    	cout << " Deleting record with key = " << kill[i/10].key << "  [pageNo,slotNo] = ";
 	        cout << "[" << kill[i/10].r.pageNo<<","<<kill[i/10].r.slotNo<<"] failed !!"<<endl;
@@ -174,7 +171,6 @@ int key;
         }
     }
 
-//btf->treeDump(btf->headerpage.rootPageID);
     delete btf;
 
     btf = new BTreeFile(status, "BTreeIndex");
@@ -396,7 +392,6 @@ void BTreeTest::test3() {
     while(!keysamples.eof()) {
 		rid.pageNo = (int)(key[0]+key[1]+key[2]);
 		rid.slotNo = rid.pageNo;
-printf("inserting %dth value %s\n",i,key);
         if (btf->insert(key, rid) != OK) {
             minibase_errors.show_errors();
         }
@@ -408,20 +403,19 @@ printf("inserting %dth value %s\n",i,key);
     }
     cout << "\nNumber of records inserted is " << i << endl;
     cout << "\n--------------End of insert----------------" << endl;
-//btf->treeDump(btf->headerpage.rootPageID);
+
     // test delete()
     cout << "\n------Start to delete some records----------" << endl;
 
     // delete the lokey
     lorid.pageNo = (int)(lokey[0]+lokey[1]+lokey[2]);
     lorid.slotNo = lorid.pageNo;
-/*
+
     if (btf->Delete(lokey, lorid) != OK)
         minibase_errors.show_errors();
     else
 	cout << "\nSuccessfully deleted record with key = " << lokey << endl;
     cout << "\n---------------End of delete----------------" << endl;
-*/
 
     delete btf;
     btf = new BTreeFile(status, "BTreeIndex");

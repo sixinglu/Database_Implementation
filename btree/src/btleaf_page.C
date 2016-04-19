@@ -8,11 +8,11 @@
 #include "btleaf_page.h"
 
 const char* BTLeafErrorMsgs[] = {
-// OK,
-// Insert Record Failed,
+	// OK,
+	// Insert Record Failed,
 };
 static error_string_table btree_table(BTLEAFPAGE, BTLeafErrorMsgs);
-   
+
 /*
  * Status BTLeafPage::insertRec(const void *key,
  *                             AttrType key_type,
@@ -37,23 +37,23 @@ static error_string_table btree_table(BTLEAFPAGE, BTLeafErrorMsgs);
  */
 
 Status BTLeafPage::insertRec(const void *key,
-                              AttrType key_type,
-                              RID dataRid,
-                              RID& rid)
+		AttrType key_type,
+		RID dataRid,
+		RID& rid)
 {
-    KeyDataEntry tmpEntry;
-    int entry_len;
-    Datatype dtype;
-    dtype.rid = dataRid;
-    nodetype ndtype = LEAF;
-    make_entry(&tmpEntry,key_type,key,ndtype,dtype,
-               &entry_len);
-char* rec = new char[entry_len];
-get_key_data(rec,(Datatype *)&rec[entry_len - sizeof(RID)],&tmpEntry,entry_len,LEAF);
-    //printf("insert rec int key %d, datarid pageno %d, datarid slotno %d\n",((Keytype*)key)->intkey,dataRid.pageNo,dataRid.slotNo);
-    insertRecord (key_type, rec, entry_len,rid);
-delete[] rec;
-    return OK;
+	KeyDataEntry tmpEntry;
+	int entry_len;
+	Datatype dtype;
+	dtype.rid = dataRid;
+	nodetype ndtype = LEAF;
+	make_entry(&tmpEntry,key_type,key,ndtype,dtype,
+			&entry_len);
+	char* rec = new char[entry_len];
+	get_key_data(rec,(Datatype *)&rec[entry_len - sizeof(RID)],&tmpEntry,entry_len,LEAF);
+	//printf("insert rec int key %d, datarid pageno %d, datarid slotno %d\n",((Keytype*)key)->intkey,dataRid.pageNo,dataRid.slotNo);
+	insertRecord (key_type, rec, entry_len,rid);
+	delete[] rec;
+	return OK;
 }
 
 /*
@@ -68,21 +68,21 @@ delete[] rec;
  */
 
 Status BTLeafPage::get_data_rid(void *key,
-                                AttrType key_type,
-                                RID & dataRid)
+		AttrType key_type,
+		RID & dataRid)
 {
-  // put your code here
-   Status status = OK;
-    
-    // if this page is deleted
-    if(this->empty()==true){
-        return OK;
-    }
-    
-    // read the key inside leaf record one by one
-    RID currRID, prevRID, data;
-    status = this->firstRecord(currRID);               // read the first index RID
-    do{
+	// put your code here
+	Status status = OK;
+
+	// if this page is deleted
+	if(this->empty()==true){
+		return OK;
+	}
+
+	// read the key inside leaf record one by one
+	RID currRID, prevRID, data;
+	status = this->firstRecord(currRID);               // read the first index RID
+	do{
 		KeyDataEntry recPtr;
 		char* tmpPtr =(char*)&recPtr;
 		int recLen;
@@ -90,27 +90,27 @@ Status BTLeafPage::get_data_rid(void *key,
 		status = this->getRecord(currRID,(char*)&recPtr,recLen);   // read the next index record
 
 		data = *(RID*)&tmpPtr[recLen-sizeof(RID)];
-        
-        // compare the key
-        int compareResult = keyCompare(key,cur_key,key_type);
-//        if(compareResult==0){  // the key already there
-//            return DONE;
-//        }
-        if(compareResult==0){  // the insert key is smaller
-            
-            // this record point to the page is the next level search page
-           dataRid = currRID;
-            return OK;
-            
-        }
-        // else the insert key is larger, move on to next key record
-        
-        prevRID = currRID;
-        
-    }
-    while(this->nextRecord(prevRID,currRID)==OK);
-    
-    return status;
+
+		// compare the key
+		int compareResult = keyCompare(key,cur_key,key_type);
+		//        if(compareResult==0){  // the key already there
+		//            return DONE;
+		//        }
+		if(compareResult==0){  // the insert key is smaller
+
+			// this record point to the page is the next level search page
+			dataRid = currRID;
+			return OK;
+
+		}
+		// else the insert key is larger, move on to next key record
+
+		prevRID = currRID;
+
+	}
+	while(this->nextRecord(prevRID,currRID)==OK);
+
+	return status;
 }
 
 /* 
@@ -126,49 +126,49 @@ Status BTLeafPage::get_data_rid(void *key,
  * two components: namely, the key and datarid. 
  */
 Status BTLeafPage::get_first (RID& rid,
-                              void *key,
-                              RID & dataRid)
+		void *key,
+		RID & dataRid)
 { 
-Status status;
-    RID currRID;
-    status = this->firstRecord(currRID);   
-if(status != OK){
-	printf("no record on first record");
-	return DONE;
-}
-KeyDataEntry recPtr;
-        int recLen;
-        
-        status = this->getRecord(currRID,(char*)&recPtr,recLen);   // read the next index record
-Datatype tmpID;
-get_key_data(key, &tmpID,&recPtr, recLen, LEAF);
-dataRid = tmpID.rid;
-rid = currRID;
-  return status;
+	Status status;
+	RID currRID;
+	status = this->firstRecord(currRID);   
+	if(status != OK){
+		printf("no record on first record");
+		return DONE;
+	}
+	KeyDataEntry recPtr;
+	int recLen;
+
+	status = this->getRecord(currRID,(char*)&recPtr,recLen);   // read the next index record
+	Datatype tmpID;
+	get_key_data(key, &tmpID,&recPtr, recLen, LEAF);
+	dataRid = tmpID.rid;
+	rid = currRID;
+	return status;
 }
 
 Status BTLeafPage::get_next (RID& rid,
-                             void *key,
-                             RID & dataRid)
+		void *key,
+		RID & dataRid)
 {
-Status status;
-KeyDataEntry recPtr;
-        int recLen;
-        status = this->getRecord(rid,(char*)&recPtr,recLen);
-if(status != OK){
-	printf("no record on this record\n");
-	return DONE;
-}
-RID nextRid;
+	Status status;
+	KeyDataEntry recPtr;
+	int recLen;
+	status = this->getRecord(rid,(char*)&recPtr,recLen);
+	if(status != OK){
+		printf("no record on this record\n");
+		return DONE;
+	}
+	RID nextRid;
 	status = this->nextRecord(rid, nextRid);
-if(status != OK){
-	printf("no record on next record\n");
-	return DONE;
-}
-        status = this->getRecord(nextRid,(char*)&recPtr,recLen);
-rid = nextRid;
-Datatype tmpID;
-get_key_data(key, &tmpID,&recPtr, recLen, INDEX);
-dataRid = tmpID.rid;
-  return OK;
+	if(status != OK){
+		printf("no record on next record\n");
+		return DONE;
+	}
+	status = this->getRecord(nextRid,(char*)&recPtr,recLen);
+	rid = nextRid;
+	Datatype tmpID;
+	get_key_data(key, &tmpID,&recPtr, recLen, INDEX);
+	dataRid = tmpID.rid;
+	return OK;
 }

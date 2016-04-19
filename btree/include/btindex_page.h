@@ -15,69 +15,69 @@
 // enum btIndexErrCodes  {...}
 
 class BTIndexPage : public SortedPage {
- private:
-   // No private variables should be declared.
+	private:
+		// No private variables should be declared.
 
- public:
+	public:
 
-// In addition to initializing the  slot directory and internal structure
-// of the HFPage, this function sets up the type of the record page.
+		// In addition to initializing the  slot directory and internal structure
+		// of the HFPage, this function sets up the type of the record page.
 
-   void init(PageId pageNo) { HFPage::init(pageNo); set_type(INDEX); }
+		void init(PageId pageNo) { HFPage::init(pageNo); set_type(INDEX); }
 
-// ------------------- insertKey ------------------------
-// Inserts a <key, page pointer> value into the index node.
-// This is accomplished by a call to SortedPage::insertRecord()
-// This function sets up the recPtr field for the call to
-// SortedPage::insertRecord()
-   
-   Status insertKey(const void *key, AttrType key_type, PageId pageNo, RID& rid);
+		// ------------------- insertKey ------------------------
+		// Inserts a <key, page pointer> value into the index node.
+		// This is accomplished by a call to SortedPage::insertRecord()
+		// This function sets up the recPtr field for the call to
+		// SortedPage::insertRecord()
 
-// ------------------- deletekey ------------------------
-// Delete an index entry with a key
+		Status insertKey(const void *key, AttrType key_type, PageId pageNo, RID& rid);
 
-   Status deleteKey(const void *key, AttrType key_type, RID& curRid);
+		// ------------------- deletekey ------------------------
+		// Delete an index entry with a key
 
-// ------------------ get_page_no -----------------------
-// This function encapsulates the search routine to search a
-// BTIndexPage. It uses the standard search routine as
-// described in the textbook, and returns the page_no of the
-// child to be searched next.
+		Status deleteKey(const void *key, AttrType key_type, RID& curRid);
 
-   //Status get_page_no(const void *key, AttrType key_type, PageId & pageNo);
+		// ------------------ get_page_no -----------------------
+		// This function encapsulates the search routine to search a
+		// BTIndexPage. It uses the standard search routine as
+		// described in the textbook, and returns the page_no of the
+		// child to be searched next.
 
-// ------------------ get_insert_page_no -----------------------
-// This function finds the next pageNo to search in a 
-// BTIndexPage. It iterates all entries in an index page
-// and creates leftmost link if necessary and returns the page_no of the
-// child to be searched next.
-    Status get_insert_page_no(const void *key,
-                                AttrType key_type,
-                                PageId & pageNo);
-// ------------------- Iterators ------------------------
-// The two functions get_first and get_next provide an
-// iterator interface to the records on a BTIndexPage.
-// get_first returns the first <key, pageNo> pair from the page,
-// while get_next returns the next pair on the page.
-// These functions make calls to HFPage::firstRecord() and
-// HFPage::nextRecord(), and then split the flat record into its
-// two components: namely, the key and pageNo.
-// Should return NOMORERECS when there are no more pairs.
+		//Status get_page_no(const void *key, AttrType key_type, PageId & pageNo);
 
-   Status get_first(RID& rid, void *key, PageId & pageNo);
-   Status get_next (RID& rid, void *key, PageId & pageNo);
+		// ------------------ get_insert_page_no -----------------------
+		// This function finds the next pageNo to search in a 
+		// BTIndexPage. It iterates all entries in an index page
+		// and creates leftmost link if necessary and returns the page_no of the
+		// child to be searched next.
+		Status get_insert_page_no(const void *key,
+				AttrType key_type,
+				PageId & pageNo);
+		// ------------------- Iterators ------------------------
+		// The two functions get_first and get_next provide an
+		// iterator interface to the records on a BTIndexPage.
+		// get_first returns the first <key, pageNo> pair from the page,
+		// while get_next returns the next pair on the page.
+		// These functions make calls to HFPage::firstRecord() and
+		// HFPage::nextRecord(), and then split the flat record into its
+		// two components: namely, the key and pageNo.
+		// Should return NOMORERECS when there are no more pairs.
 
-// ------------------- Left Link ------------------------
-// You will recall that index pages have a left-most
-// pointer that is followed whenever the search key value
-// is less than the least key value in the index node. The
-// previous page pointer is used to implement the left link.
+		Status get_first(RID& rid, void *key, PageId & pageNo);
+		Status get_next (RID& rid, void *key, PageId & pageNo);
 
-   PageId getLeftLink(void) { return getPrevPage(); }
-   void   setLeftLink(PageId left) { setPrevPage(left); }
+		// ------------------- Left Link ------------------------
+		// You will recall that index pages have a left-most
+		// pointer that is followed whenever the search key value
+		// is less than the least key value in the index node. The
+		// previous page pointer is used to implement the left link.
 
-    
-   // The remaining functions of SortedPage are still visible.
+		PageId getLeftLink(void) { return getPrevPage(); }
+		void   setLeftLink(PageId left) { setPrevPage(left); }
+
+
+		// The remaining functions of SortedPage are still visible.
 };
 
 #endif

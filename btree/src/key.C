@@ -26,17 +26,17 @@ using namespace std;
  */
 int keyCompare(const void *key1, const void *key2, AttrType t)
 {
-  
-    // AttrType only be  attrString or attrInteger
-    if(t==attrString){
-        return strncmp( ((Keytype*)key1)->charkey,((Keytype*)key2)->charkey,MAX_KEY_SIZE1 );
-    }
-    else if(t==attrInteger){
-        return ((Keytype*)key1)->intkey - ((Keytype*)key2)->intkey;
-    }
-    else{
-        return FAIL;
-    }
+
+	// AttrType only be  attrString or attrInteger
+	if(t==attrString){
+		return strncmp( ((Keytype*)key1)->charkey,((Keytype*)key2)->charkey,MAX_KEY_SIZE1 );
+	}
+	else if(t==attrInteger){
+		return ((Keytype*)key1)->intkey - ((Keytype*)key2)->intkey;
+	}
+	else{
+		return FAIL;
+	}
 }
 
 /*
@@ -47,21 +47,21 @@ int keyCompare(const void *key1, const void *key2, AttrType t)
  * multiple of sizeof(PageNo) for alignment purposes.
  */
 void make_entry(KeyDataEntry *target,
-                AttrType key_type, const void *key,
-                nodetype ndtype, Datatype data,
-                int *pentry_len)
+		AttrType key_type, const void *key,
+		nodetype ndtype, Datatype data,
+		int *pentry_len)
 {
-    // get key size
-    int keylenth = get_key_length(key, key_type);
-    
-    // get data size
-    *pentry_len = get_key_data_length(key, key_type, ndtype);
-    
-    // memcpy
-    memcpy(&target->key, key, keylenth);
-    memcpy(&target->data, &data, *pentry_len-keylenth);
-  
-    return;
+	// get key size
+	int keylenth = get_key_length(key, key_type);
+
+	// get data size
+	*pentry_len = get_key_data_length(key, key_type, ndtype);
+
+	// memcpy
+	memcpy(&target->key, key, keylenth);
+	memcpy(&target->data, &data, *pentry_len-keylenth);
+
+	return;
 }
 
 
@@ -71,23 +71,23 @@ void make_entry(KeyDataEntry *target,
  * of the data chunk (to calculate data start of the <data> part).
  */
 void get_key_data(void *targetkey, Datatype *targetdata,
-                  KeyDataEntry *psource, int entry_len, nodetype ndtype)
+		KeyDataEntry *psource, int entry_len, nodetype ndtype)
 {
-    if(psource==NULL){
-        return;
-    }
-    
-    // if this node is index node
-    if(ndtype==INDEX){
-        memcpy(targetkey, &psource->key, entry_len - sizeof(PageId));
-        memcpy(targetdata, &psource->data, sizeof(PageId));
-    }
-    else if(ndtype==LEAF){  // if this node is leaf node
-        memcpy(targetkey, &psource->key, entry_len - sizeof(RID));
-        memcpy(targetdata, &psource->data, sizeof(RID));
-    }
-    
-    return;
+	if(psource==NULL){
+		return;
+	}
+
+	// if this node is index node
+	if(ndtype==INDEX){
+		memcpy(targetkey, &psource->key, entry_len - sizeof(PageId));
+		memcpy(targetdata, &psource->data, sizeof(PageId));
+	}
+	else if(ndtype==LEAF){  // if this node is leaf node
+		memcpy(targetkey, &psource->key, entry_len - sizeof(RID));
+		memcpy(targetdata, &psource->data, sizeof(RID));
+	}
+
+	return;
 }
 
 /*
@@ -95,38 +95,38 @@ void get_key_data(void *targetkey, Datatype *targetdata,
  */
 int get_key_length(const void *key, const AttrType key_type)
 {
-    int keylenth = 0;
-    
-    // calculate key size
-    if(key_type==attrString){
-        keylenth = strlen(((Keytype*)key)->charkey) + 1;;
-    }
-    else if(key_type==attrInteger){
-        keylenth = sizeof( ((Keytype*)key)->intkey );
-    }
-    
-    return keylenth;
+	int keylenth = 0;
+
+	// calculate key size
+	if(key_type==attrString){
+		keylenth = strlen(((Keytype*)key)->charkey) + 1;;
+	}
+	else if(key_type==attrInteger){
+		keylenth = sizeof( ((Keytype*)key)->intkey );
+	}
+
+	return keylenth;
 }
- 
+
 /*
  * get_key_data_length: return (key+data) length in given key_type
  */   
 int get_key_data_length(const void *key, const AttrType key_type, 
-                        const nodetype ndtype)
+		const nodetype ndtype)
 {
-    int datalenth = 0;
-    int keylenth = 0;
-    
-    // get key size
-    keylenth = get_key_length(key, key_type);
-    
-    // calculate data size
-    if(ndtype==INDEX){
-        datalenth = sizeof(PageId);
-    }
-    else if(ndtype==LEAF){
-        datalenth = sizeof(RID);
-    }
-    
-    return keylenth + datalenth;
+	int datalenth = 0;
+	int keylenth = 0;
+
+	// get key size
+	keylenth = get_key_length(key, key_type);
+
+	// calculate data size
+	if(ndtype==INDEX){
+		datalenth = sizeof(PageId);
+	}
+	else if(ndtype==LEAF){
+		datalenth = sizeof(RID);
+	}
+
+	return keylenth + datalenth;
 }

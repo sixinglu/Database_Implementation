@@ -26,7 +26,7 @@ BTreeFileScan::~BTreeFileScan()
 
 Status BTreeFileScan::get_next(RID & rid_input, void* keyptr)
 {
-RID rid_tmp;
+	RID rid_tmp;
 	Status status;
 	//printf("in get_next\n");
 	if(usedUp == true){
@@ -51,7 +51,7 @@ RID rid_tmp;
 		currRID = rid_tmp;
 		currentPage = rid_tmp.pageNo;
 		char* tmpPtr =(char*)&recPtr;
-rid_input = *(RID*)&tmpPtr[recLen-sizeof(RID)];
+		rid_input = *(RID*)&tmpPtr[recLen-sizeof(RID)];
 		return OK;
 	}
 
@@ -66,7 +66,7 @@ rid_input = *(RID*)&tmpPtr[recLen-sizeof(RID)];
 		memcpy(keyptr,cur_key,keysize());   //return value keyptr
 		status = MINIBASE_BM->unpinPage(currentPage, 0, 1);
 		char* tmpPtr =(char*)&recPtr;
-rid_input = *(RID*)&tmpPtr[recLen-sizeof(RID)];
+		rid_input = *(RID*)&tmpPtr[recLen-sizeof(RID)];
 		usedUp = true;
 		return DONE;
 	}
@@ -121,7 +121,7 @@ rid_input = *(RID*)&tmpPtr[recLen-sizeof(RID)];
 	currRID = rid_tmp;
 
 	//printf("nextRIDslot: %d\n", rid.slotNo);
-memcpy(&rid_input,&tmpPtr[recLen-sizeof(RID)],sizeof(RID));
+	memcpy(&rid_input,&tmpPtr[recLen-sizeof(RID)],sizeof(RID));
 	return OK;
 }
 
