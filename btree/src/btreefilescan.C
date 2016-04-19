@@ -116,7 +116,7 @@ Status BTreeFileScan::get_next(RID & rid, void* keyptr)
 	currentPage = nextPageId;
 	currRID = rid;
 
-	printf("nextRIDslot: %d\n", rid.slotNo);
+	//printf("nextRIDslot: %d\n", rid.slotNo);
 
 	return OK;
 }
