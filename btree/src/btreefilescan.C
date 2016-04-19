@@ -24,9 +24,9 @@ BTreeFileScan::~BTreeFileScan()
 }
 
 
-Status BTreeFileScan::get_next(RID & rid, void* keyptr)
+Status BTreeFileScan::get_next(RID & rid_input, void* keyptr)
 {
-
+RID rid_tmp;
 	Status status;
 	//printf("in get_next\n");
 	if(usedUp == true){
@@ -34,13 +34,13 @@ Status BTreeFileScan::get_next(RID & rid, void* keyptr)
 		return DONE;
 	}
 	if(getFirst==true){
-		rid = leftmostRID;
+		rid_tmp = leftmostRID;
 		// first element
 		KeyDataEntry recPtr;
 		int recLen;
 		SortedPage* current;
 		status = MINIBASE_BM->pinPage(leftmostPage, (Page* &)current, 1);
-		status = current->getRecord(rid,(char*)&recPtr,recLen);  // return value rid
+		status = current->getRecord(rid_tmp,(char*)&recPtr,recLen);  // return value rid
 		Keytype* cur_key = (Keytype*)&recPtr;
 		memcpy(keyptr,cur_key,keysize());   //return value keyptr
 		status = MINIBASE_BM->unpinPage(currentPage, 0, 1);
@@ -48,8 +48,10 @@ Status BTreeFileScan::get_next(RID & rid, void* keyptr)
 
 		//in case of exact match, only one element in scan
 		if(currRID == rightmostRID) usedUp = true;
-		currRID = rid;
-		currentPage = rid.pageNo;
+		currRID = rid_tmp;
+		currentPage = rid_tmp.pageNo;
+		char* tmpPtr =(char*)&recPtr;
+rid_input = *(RID*)&tmpPtr[recLen-sizeof(RID)];
 		return OK;
 	}
 
@@ -59,10 +61,12 @@ Status BTreeFileScan::get_next(RID & rid, void* keyptr)
 		int recLen;
 		SortedPage* current;
 		status = MINIBASE_BM->pinPage(rightmostPage, (Page* &)current, 1);
-		status = current->getRecord(rid,(char*)&recPtr,recLen);  // return value rid
+		status = current->getRecord(currRID,(char*)&recPtr,recLen);  // return value rid
 		Keytype* cur_key = (Keytype*)&recPtr;
 		memcpy(keyptr,cur_key,keysize());   //return value keyptr
 		status = MINIBASE_BM->unpinPage(currentPage, 0, 1);
+		char* tmpPtr =(char*)&recPtr;
+rid_input = *(RID*)&tmpPtr[recLen-sizeof(RID)];
 		usedUp = true;
 		return DONE;
 	}
@@ -76,7 +80,7 @@ Status BTreeFileScan::get_next(RID & rid, void* keyptr)
 	PageId nextPageId = INVALID_PAGE;
 	SortedPage *next;  
 	if(current->nextRecord(currRID,nextRID)==OK){
-		rid = nextRID;
+		rid_tmp = nextRID;
 		nextPageId = currentPage;
 		next = current;
 	}
@@ -89,19 +93,19 @@ Status BTreeFileScan::get_next(RID & rid, void* keyptr)
 				return DONE;
 			}
 			status = MINIBASE_BM->pinPage(nextPageId, (Page* &)next, 1);
-			next->firstRecord(rid);
+			next->firstRecord(rid_tmp);
 			ifEmpty = next->empty();
 			status = MINIBASE_BM->unpinPage(nextPageId, 0, 1);
 		}
 
 		status = MINIBASE_BM->pinPage(nextPageId, (Page* &)next, 1);
-		next->firstRecord(rid);
+		next->firstRecord(rid_tmp);
 	} 
 
 	// get the key
 	KeyDataEntry recPtr;
 	int recLen;
-	status = next->getRecord(rid,(char*)&recPtr,recLen);  // return value rid
+	status = next->getRecord(rid_tmp,(char*)&recPtr,recLen);  // return value rid
 	char* tmpPtr =(char*)&recPtr;
 	Keytype* cur_key = (Keytype*)&recPtr;
 	memcpy(keyptr,cur_key,keysize());   //return value keyptr
@@ -114,10 +118,10 @@ Status BTreeFileScan::get_next(RID & rid, void* keyptr)
 
 	// update
 	currentPage = nextPageId;
-	currRID = rid;
+	currRID = rid_tmp;
 
 	//printf("nextRIDslot: %d\n", rid.slotNo);
-
+memcpy(&rid_input,&tmpPtr[recLen-sizeof(RID)],sizeof(RID));
 	return OK;
 }
 

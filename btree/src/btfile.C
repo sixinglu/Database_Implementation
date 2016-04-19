@@ -243,8 +243,9 @@ status = get_leaf_page_no((void*)&key_value,headerpage.keytype,leafPage);
 		return DONE;
 	}
 
-
-	deleteLeaf->deleteRecord(rid);
+RID rid_del;
+	deleteLeaf->get_data_rid((void*)key,headerpage.keytype, rid_del);
+	deleteLeaf->deleteRecord(rid_del);
 	status = MINIBASE_BM->unpinPage(rid.pageNo, 1, 1); // dirty
 	return OK;
 

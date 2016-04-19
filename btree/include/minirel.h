@@ -31,7 +31,7 @@ struct RID{
 };
 
 
-const int MINIBASE_PAGESIZE = 128;           // in bytes
+const int MINIBASE_PAGESIZE = 1024;           // in bytes
 const int MINIBASE_BUFFER_POOL_SIZE = 1024;   // in Frames
 const int MINIBASE_DB_SIZE = 10000;           /* in Pages => the DBMS Manager 
 						 tells the DB how much disk 

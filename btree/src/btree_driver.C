@@ -36,10 +36,10 @@ Status BTreeTest::runTests(){
 	}
 
 
-	test1();
-	test2();
+	//test1();
+	//test2();
 	test3();
-	test4();
+	//test4();
 
 
 	delete minibase_globals;
@@ -129,7 +129,7 @@ void BTreeTest::test1() {
 
 
     // test insert()
-    num = 100;
+    num = 2000;
     
 struct dummy{
 RID r;
@@ -147,7 +147,7 @@ int key;
 	  kill[(i/10)].r.pageNo = rid.pageNo;
 	  kill[(i/10)].r.slotNo = rid.slotNo;
 	  kill[i/10].key = key;
-printf("%d th want to delete pno %d, sno%d. key %d\n",i/10,kill[(i/10)].r.pageNo,kill[(i/10)].r.slotNo,kill[i/10].key );
+//printf("%d th want to delete pno %d, sno%d. key %d\n",i/10,kill[(i/10)].r.pageNo,kill[(i/10)].r.slotNo,kill[i/10].key );
         }
 
         if (btf->insert(&key, rid) != OK) {
@@ -164,7 +164,7 @@ printf("%d th want to delete pno %d, sno%d. key %d\n",i/10,kill[(i/10)].r.pageNo
     for (i = 0; i < num; i++) {
         if (i % 10 == 0) {
 	    j++;
-printf("%d th want to delete pno %d, sno%d. key %d\n",i/10,kill[(i/10)].r.pageNo,kill[(i/10)].r.slotNo,kill[i/10].key );
+//printf("%d th want to delete pno %d, sno%d. key %d\n",i/10,kill[(i/10)].r.pageNo,kill[(i/10)].r.slotNo,kill[i/10].key );
 	    if (btf->Delete(&kill[i/10].key, kill[(i/10)].r) != OK) {
 	    	cout << " Deleting record with key = " << kill[i/10].key << "  [pageNo,slotNo] = ";
 	        cout << "[" << kill[i/10].r.pageNo<<","<<kill[i/10].r.slotNo<<"] failed !!"<<endl;
@@ -173,7 +173,8 @@ printf("%d th want to delete pno %d, sno%d. key %d\n",i/10,kill[(i/10)].r.pageNo
 
         }
     }
-btf->treeDump(btf->headerpage.rootPageID);
+
+//btf->treeDump(btf->headerpage.rootPageID);
     delete btf;
 
     btf = new BTreeFile(status, "BTreeIndex");
@@ -182,8 +183,8 @@ btf->treeDump(btf->headerpage.rootPageID);
   
     // test scan and delete_current()
     cout << "\n----------- Testing scans -------------" << endl;
-    lokey = 20;
-    hikey = 40;
+    lokey = 200;
+    hikey = 400;
 
     //AllScan
     scan = btf->new_scan(NULL,NULL);
@@ -395,6 +396,7 @@ void BTreeTest::test3() {
     while(!keysamples.eof()) {
 		rid.pageNo = (int)(key[0]+key[1]+key[2]);
 		rid.slotNo = rid.pageNo;
+//printf("inserting %dth value %s\n",i,key);
         if (btf->insert(key, rid) != OK) {
             minibase_errors.show_errors();
         }
@@ -413,13 +415,13 @@ void BTreeTest::test3() {
     // delete the lokey
     lorid.pageNo = (int)(lokey[0]+lokey[1]+lokey[2]);
     lorid.slotNo = lorid.pageNo;
-
+/*
     if (btf->Delete(lokey, lorid) != OK)
         minibase_errors.show_errors();
     else
 	cout << "\nSuccessfully deleted record with key = " << lokey << endl;
     cout << "\n---------------End of delete----------------" << endl;
-
+*/
     delete btf;
     btf = new BTreeFile(status, "BTreeIndex");
   
