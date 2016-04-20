@@ -23,7 +23,7 @@
 class HeaderPage
 {
 	public:
-		PageId headerpageID;
+
     
 		PageId rootPageID;      // compare the rootPageId to tell if the page is root
 		AttrType keytype;
@@ -78,7 +78,7 @@ class BTreeFile: public IndexFile
 	private:
 		bool destroyed;
 
-
+		PageId headerpageID;
 		/******* Insert *****/
 
 		// split the page into two page, copyup (leaf), pushup(index) key
