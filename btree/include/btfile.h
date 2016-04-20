@@ -23,7 +23,8 @@
 class HeaderPage
 {
 	public:
-		//PageId headerpageID;
+		PageId headerpageID;
+    
 		PageId rootPageID;      // compare the rootPageId to tell if the page is root
 		AttrType keytype;
 		nodetype PageType;
