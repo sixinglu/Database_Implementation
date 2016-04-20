@@ -840,7 +840,7 @@ IndexFileScan *BTreeFile::new_scan(const void *lo_key, const void *hi_key) {
 				compareResult_r = keyCompare((void*)hi_key,(void*)cur_key,headerpage.keytype);
 
 			if(compareResult_r < 0  && rightFlag == 0){
-				if(prevRID.pageNo == -1)
+				if(prevRID.pageNo == -1 || curRID == scanner->leftmostRID)
 					scanner->usedUp = true;
 				scanner->rightmostRID = prevRID;
 				rightFlag = 1;

@@ -36,9 +36,9 @@ Status BTreeTest::runTests(){
 	}
 
 
-	test1();
-	test2();
-	test3();
+	//test1();
+	//test2();
+	//test3();
 	test4();
 
 
@@ -525,7 +525,7 @@ void BTreeTest::test3() {
 	cout << " Failed as expected: no records scanned " << endl;
 
 	// hikey < smallest key
-	strcpy(lokey, "bbb");
+	strcpy(lokey, "aaa");
 	strcpy(hikey, "aaaaa");
 	scan = btf->new_scan(lokey, hikey);
 	cout << "\n----Start MinMaxRangeScan with lokey = " << lokey ;
