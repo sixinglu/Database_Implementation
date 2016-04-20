@@ -36,9 +36,9 @@ Status BTreeTest::runTests(){
 	}
 
 
-	//test1();
-	//test2();
-	//test3();
+	test1();
+	test2();
+	test3();
 	test4();
 
 
@@ -639,7 +639,7 @@ cout << " key " << values[i].key
     cout << "\n------Start to insert " << num << "  records------" << endl;
 
     for (i=0; i < num; i++){
-        cout << " Inserting key " << values[i].key <<endl;
+//        cout << " Inserting key " << values[i].key <<endl;
              //<< values[i].sort_value1 << endl;
        	if (btf->insert(&(values[i].key), values[i].r) != OK) {
             minibase_errors.show_errors();
