@@ -85,7 +85,7 @@ Status SortedPage::insertRecord (AttrType key_type,
 	//ordering. And the newly inserted record has the largest rid.
 	//So, first find the slotNo to place current record by finding slotPivot
 	int slotPivot = slotTail;
-	int prevSlot = 0;
+	int prevSlot = -1;
 	for(int i = 0; i < this->slotCnt; i++){
 		//if every record > new record, slotPivot = 0
 		//if every record < new record, slotPivot = tmprid.slotNo
@@ -103,22 +103,44 @@ Status SortedPage::insertRecord (AttrType key_type,
 	}
 	//every slot after pivot points to a larger key than each other
 	//yet pivot holds the minimum key, so they have to shift by one
-	for(int i = slotPivot; i < this->slotCnt; i++){
-		if(this->slot[i].length != EMPTY_SLOT){
-			//switch
-			int tmpOffset = this->slot[i].offset;
-			this->slot[i].offset = this->slot[slotTail].offset;
-			this->slot[slotTail].offset = tmpOffset;
-			int tmpLength = this->slot[i].length;
-			this->slot[i].length = this->slot[slotTail].length;
-			this->slot[slotTail].length = tmpLength;
+
+	//slotPrint();
+	if(slotPivot > slotTail){
+		int lastLength = this->slot[slotTail].length;
+		int lastOffset = this->slot[slotTail].offset;
+		int tmpOffset;
+		int tmpLength;
+		for(int i = slotPivot; i >= slotTail; i--){
+			if(this->slot[i].length != EMPTY_SLOT){
+				//switch
+				tmpLength = this->slot[i].length;
+				tmpOffset = this->slot[i].offset;
+				this->slot[i].offset = lastOffset;
+				this->slot[i].length = lastLength;
+				lastOffset = tmpOffset;
+				lastLength = tmpLength;
+			}
 		}
 	}
-	//slotPrint();
+	else if(slotPivot < slotTail){
+		int lastLength = this->slot[slotTail].length;
+		int lastOffset = this->slot[slotTail].offset;
+		int tmpOffset;
+		int tmpLength;
+		for(int i = slotPivot + 1; i <= slotTail; i++){
+			if(this->slot[i].length != EMPTY_SLOT){
+				//switch
+				tmpLength = this->slot[i].length;
+				tmpOffset = this->slot[i].offset;
+				this->slot[i].offset = lastOffset;
+				this->slot[i].length = lastLength;
+				lastOffset = tmpOffset;
+				lastLength = tmpLength;
+			}
+		}
+	}
 	return OK;
 }
-
-
 /*
  * Status SortedPage::deleteRecord (const RID& rid)
  *
