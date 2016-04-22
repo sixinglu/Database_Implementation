@@ -197,3 +197,12 @@ Status Scan::nextDirPage() {
   // put your code here
   return OK;
 }
+Status Scan::position(RID rid){
+Status status;
+ //status = MINIBASE_BM->unpinPage(dataPageId,1,0);
+
+		dataPageId = rid.pageNo;
+		userRid = rid;
+status = MINIBASE_BM->pinPage(dataPageId, (Page*&)dataPage,0);
+return status;
+}

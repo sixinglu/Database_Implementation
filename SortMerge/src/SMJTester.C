@@ -133,6 +133,7 @@ int SMJTester::test1()
     Status status;
     createFiles();
     for (int i=1; i<=7; i++) {
+//if(i == 5 ) continue;
     	status=test(i);
     	if (status!=OK) {
     		cout<<"Test "<<i<<" Failed.\n"<<endl;

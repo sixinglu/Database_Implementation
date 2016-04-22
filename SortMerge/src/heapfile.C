@@ -596,7 +596,8 @@ Status HeapFile::getRecord (const RID& rid, char *recPtr, int& recLen)
 Scan *HeapFile::openScan(Status& status)
 {
 	Scan *scanner = new Scan(this,status);
-
+if(getRecCnt() == 0)
+	scanner->scanIsDone = 1;	
 	return scanner;
 }
 

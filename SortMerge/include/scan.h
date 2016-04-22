@@ -40,7 +40,7 @@ class Scan {
      * See heapfile.h for the overall description of a heapfile.
      * (Then see hfpage.h for HFPage ops.)
      */
-
+friend class HeapFile;
     // The heapfile we are using.
     HeapFile  *_hf;
 
