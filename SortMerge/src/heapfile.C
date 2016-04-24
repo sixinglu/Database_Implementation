@@ -35,6 +35,8 @@ HeapFile::HeapFile( const char *name, Status& returnStatus )
 		fileName = new char[strlen(name)+1];  // allocate spece for fileName
 		strcpy(fileName,name);   // load file name
 		returnStatus = OK;
+//printf("file already exists\n");
+
 	}
 	else{
 
@@ -619,19 +621,26 @@ Status HeapFile::deleteFile()
 		while(iterate_dirPage != INVALID_PAGE){   // when reach Pid=-1 means the end of the linklist
 
 			status = MINIBASE_BM->pinPage( iterate_dirPage, (Page* &)currdir,0 );   // read dir page from the disk
+            
+            if(status!=OK){
+                MINIBASE_BM->unpinPage(iterate_dirPage, 0, 1);
+                return MINIBASE_FIRST_ERROR(HEAPFILE, status);
+            }
 
 			// debug
 			//cout<<"pin_dirPage: "<<iterate_dirPage<<endl;
+            if(currdir->empty()==true){
+                MINIBASE_BM->unpinPage(iterate_dirPage, 0, 1);
+                continue;
+            }
 
-			if(status!=OK){
-				return MINIBASE_FIRST_ERROR(HEAPFILE, status);
-			}
 			//printf("file torn down loop \n");
 			// get information from dir page
 			RID recordinPage;
 			RID prevrecordinPage;
 			status = currdir->firstRecord(recordinPage);
 			if(status!=OK){
+                MINIBASE_BM->unpinPage(iterate_dirPage, 0, 1);
 				return MINIBASE_FIRST_ERROR(HEAPFILE, NO_RECORDS);
 			}
 
@@ -648,8 +657,14 @@ Status HeapFile::deleteFile()
 				HFPage* currpage;
 				status = MINIBASE_BM->pinPage(dirinfo->pageId, (Page* &)currpage,0 );
 				if(status!=OK){
+                    MINIBASE_BM->unpinPage(dirinfo->pageId, 0, 1);
 					return MINIBASE_FIRST_ERROR(HEAPFILE, status);
 				}
+                
+                if(currpage->empty()==true){
+                    MINIBASE_BM->unpinPage(dirinfo->pageId, 0, 1);
+                    continue;
+                }
 
 				RID DataPageRid;
 				RID prevDataRid;

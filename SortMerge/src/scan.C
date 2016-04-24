@@ -38,7 +38,7 @@ Status Scan::getNext(RID& rid, char *recPtr, int& recLen)
     Status status;
     
     if(scanIsDone==1){
-    	status = MINIBASE_BM->unpinPage(dirPageId,1,0);
+    	//status = MINIBASE_BM->unpinPage(dirPageId,1,0);
         return DONE;
 
     }
