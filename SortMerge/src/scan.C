@@ -197,12 +197,25 @@ Status Scan::nextDirPage() {
   // put your code here
   return OK;
 }
-Status Scan::position(RID rid){
-Status status;
- //status = MINIBASE_BM->unpinPage(dataPageId,1,0);
-
-		dataPageId = rid.pageNo;
-		userRid = rid;
-status = MINIBASE_BM->pinPage(dataPageId, (Page*&)dataPage,0);
-return status;
+Status Scan::position(RID rid){  // u sure the rid will have valid pageNo in it?
+    Status status;
+    
+    dataPageId = rid.pageNo;
+    userRid = rid;
+    status = MINIBASE_BM->pinPage(dataPageId, (Page*&)dataPage,0);
+    
+    RID travese_rid;
+    RID prev_rid;
+    dataPage->firstRecord(travese_rid);
+    do{
+        if(travese_rid==rid){
+            MINIBASE_BM->unpinPage(dataPageId, 0, 1);
+            return OK;
+        }
+        prev_rid = travese_rid;
+        
+    }while(dataPage->nextRecord(prev_rid, travese_rid));
+    MINIBASE_BM->unpinPage(dataPageId, 0, 1);
+    
+    return DONE;
 }
