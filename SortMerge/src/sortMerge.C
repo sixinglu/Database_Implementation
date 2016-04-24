@@ -49,9 +49,9 @@ sortMerge::sortMerge(
     s_tmp =    new Sort(filename2,tmp_name2, len_in1,in1,t1_str_sizes,join_col_in1,order,amt_of_mem, s );
     
     HeapFile* sorted1 = new HeapFile(tmp_name1,status);
-    testPrint(sorted1);
+ //   testPrint(sorted1);
     HeapFile* sorted2 = new HeapFile(tmp_name2,status);
-    testPrint(sorted2);
+  //  testPrint(sorted2);
     HeapFile* output = new HeapFile(filename3,status);
     
     Scan*	f1_scan = sorted1->openScan(status);
